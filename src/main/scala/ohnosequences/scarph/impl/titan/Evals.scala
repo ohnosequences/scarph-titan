@@ -11,7 +11,7 @@ case object evals {
   // import cosas.ops.typeSets._
 
   import ohnosequences.{ scarph => s }
-  import s.graphTypes._, s.steps._, s.paths._, s.containers._, s.combinators._, s.evals._, s.predicates._, s.schemas._
+  import s.graphTypes._, s.morphisms._, s.evals._, s.predicates._, s.schemas._
   import s.impl.titan.predicates._
 
   import scalaz.{ NonEmptyList => NEList }
@@ -34,13 +34,13 @@ case object evals {
 
   implicit def containerNEList[X]:
         ValueContainer[AtLeastOne, JIterable[X]] with Out[NEList[X]] =
-    new ValueContainer[AtLeastOne, JIterable[X]] with Out[NEList[X]] { 
+    new ValueContainer[AtLeastOne, JIterable[X]] with Out[NEList[X]] {
       def apply(in: In1): Out = {
         val l = in.toList
         val head = l.headOption
           .getOrElse(throw DataInconsistencyException("A non empty iterable was expected, check consistency of your data"))
         val tail = l.drop(1)
-        NEList.nel(head, tail) 
+        NEList.nel(head, tail)
       }
     }
 
@@ -51,76 +51,76 @@ case object evals {
   // NOTE: NEList has instances in its companion object
 
 
-  implicit def flattenSS[X]: 
+  implicit def flattenSS[X]:
         FlattenVals[Stream, Stream, X] with Out[Stream[X]] =
     new FlattenVals[Stream, Stream, X] with Out[Stream[X]] { def apply(in: In1): Out = in.flatten }
-  implicit def flattenSO[X]: 
+  implicit def flattenSO[X]:
         FlattenVals[Stream, Option, X] with Out[Stream[X]] =
     new FlattenVals[Stream, Option, X] with Out[Stream[X]] { def apply(in: In1): Out = in.flatten }
-  implicit def flattenOS[X]: 
+  implicit def flattenOS[X]:
         FlattenVals[Option, Stream, X] with Out[Stream[X]] =
     new FlattenVals[Option, Stream, X] with Out[Stream[X]] { def apply(in: In1): Out = in.getOrElse(Stream[X]()) }
-  implicit def flattenOO[X]: 
+  implicit def flattenOO[X]:
         FlattenVals[Option, Option, X] with Out[Option[X]] =
     new FlattenVals[Option, Option, X] with Out[Option[X]] { def apply(in: In1): Out = in.flatten }
-  implicit def flattenNN[X]: 
+  implicit def flattenNN[X]:
         FlattenVals[NEList, NEList, X] with Out[NEList[X]] =
     new FlattenVals[NEList, NEList, X] with Out[NEList[X]] { def apply(in: In1): Out = in.flatMap(s => s) }
-  implicit def flattenNS[X]: 
+  implicit def flattenNS[X]:
         FlattenVals[NEList, Stream, X] with Out[Stream[X]] =
     new FlattenVals[NEList, Stream, X] with Out[Stream[X]] { def apply(in: In1): Out = in.stream.flatten }
-  implicit def flattenSN[X]: 
+  implicit def flattenSN[X]:
         FlattenVals[Stream, NEList, X] with Out[Stream[X]] =
     new FlattenVals[Stream, NEList, X] with Out[Stream[X]] { def apply(in: In1): Out = in.flatMap(s => s.stream) }
-  implicit def flattenNO[X]: 
+  implicit def flattenNO[X]:
         FlattenVals[NEList, Option, X] with Out[Stream[X]] =
     new FlattenVals[NEList, Option, X] with Out[Stream[X]] { def apply(in: In1): Out = in.stream.flatten }
-  implicit def flattenON[X]: 
+  implicit def flattenON[X]:
         FlattenVals[Option, NEList, X] with Out[Stream[X]] =
     new FlattenVals[Option, NEList, X] with Out[Stream[X]] { def apply(in: In1): Out = in.map(_.stream).getOrElse(Stream[X]()) }
 
 
-  implicit def mergeSS[X]: 
+  implicit def mergeSS[X]:
         MergeVals[Stream[X], Stream[X]] with Out[Stream[X]] =
     new MergeVals[Stream[X], Stream[X]] with Out[Stream[X]] { def apply(in1: In1, in2: In2): Out = in1 ++ in2 }
-  implicit def mergeSO[X]: 
+  implicit def mergeSO[X]:
         MergeVals[Stream[X], Option[X]] with Out[Stream[X]] =
     new MergeVals[Stream[X], Option[X]] with Out[Stream[X]] { def apply(in1: In1, in2: In2): Out = in1 ++ in2 }
-  implicit def mergeOS[X]: 
+  implicit def mergeOS[X]:
         MergeVals[Option[X], Stream[X]] with Out[Stream[X]] =
     new MergeVals[Option[X], Stream[X]] with Out[Stream[X]] { def apply(in1: In1, in2: In2): Out = in1.toStream ++ in2 }
-  implicit def mergeOO[X]: 
+  implicit def mergeOO[X]:
         MergeVals[Option[X], Option[X]] with Out[Stream[X]] =
     new MergeVals[Option[X], Option[X]] with Out[Stream[X]] { def apply(in1: In1, in2: In2): Out = in1.toStream ++ in2.toStream }
-  implicit def mergeNN[X]: 
+  implicit def mergeNN[X]:
         MergeVals[NEList[X], NEList[X]] with Out[NEList[X]] =
     new MergeVals[NEList[X], NEList[X]] with Out[NEList[X]] { def apply(in1: In1, in2: In2): Out = in1 append in2 }
-  implicit def mergeNS[X]: 
+  implicit def mergeNS[X]:
         MergeVals[NEList[X], Stream[X]] with Out[NEList[X]] =
     new MergeVals[NEList[X], Stream[X]] with Out[NEList[X]] { def apply(in1: In1, in2: In2): Out = in1 :::> in2.toList }
-  implicit def mergeSN[X]: 
+  implicit def mergeSN[X]:
         MergeVals[Stream[X], NEList[X]] with Out[NEList[X]] =
     new MergeVals[Stream[X], NEList[X]] with Out[NEList[X]] { def apply(in1: In1, in2: In2): Out = in1.toList <::: in2 }
-  implicit def mergeNO[X]: 
+  implicit def mergeNO[X]:
         MergeVals[NEList[X], Option[X]] with Out[NEList[X]] =
     new MergeVals[NEList[X], Option[X]] with Out[NEList[X]] { def apply(in1: In1, in2: In2): Out = in1 :::> in2.toList }
-  implicit def mergeON[X]: 
+  implicit def mergeON[X]:
         MergeVals[Option[X], NEList[X]] with Out[NEList[X]] =
     new MergeVals[Option[X], NEList[X]] with Out[NEList[X]] { def apply(in1: In1, in2: In2): Out = in1.toList <::: in2 }
   // TODO: implement _inambigous_ merging for ExactyOne
   // implicit def mergeXL[X, S[_], O]
-  //   (implicit m: MergeVals[NEList[X], S[X]] { type Out = O }): 
+  //   (implicit m: MergeVals[NEList[X], S[X]] { type Out = O }):
   //       MergeVals[X, S[X]] with Out[O] =
   //   new MergeVals[X, S[X]] with Out[O] { def apply(in1: In1, in2: In2): Out = m(NEList.nel(in1, List()), in2) }
   // implicit def mergeXR[X, F[_], O]
-  //   (implicit m: MergeVals[F[X], NEList[X]] { type Out = O }): 
+  //   (implicit m: MergeVals[F[X], NEList[X]] { type Out = O }):
   //       MergeVals[F[X], X] with Out[O] =
   //   new MergeVals[F[X], X] with Out[O] { def apply(in1: In1, in2: In2): Out = m(in1, NEList.nel(in2, List())) }
 
 
   implicit def evalVertexQuery[
     S <: AnyGraphSchema, P <: AnyPredicate { type Element <: AnyVertex }, C <: AnyContainer, O
-  ](implicit 
+  ](implicit
     toBlueprintsQuery: ToBlueprintsPredicate[P],
     packValue: ValueContainer[C, JIterable[TitanVertex]] { type Out = O }
   ):  EvalPathOn[TitanGraph, GraphQuery[S, C, P], O] =
@@ -135,7 +135,7 @@ case object evals {
 
   implicit def evalEdgeQuery[
     S <: AnyGraphSchema, P <: AnyPredicate { type Element <: AnyEdge }, C <: AnyContainer, O
-  ](implicit 
+  ](implicit
     toBlueprintsQuery: ToBlueprintsPredicate[P],
     packValue: ValueContainer[C, JIterable[TitanEdge]] { type Out = O }
   ):  EvalPathOn[TitanGraph, GraphQuery[S, C, P], O] =
@@ -177,14 +177,14 @@ case object evals {
 
   implicit def evalInE[
     P <: AnyPredicate { type Element <: AnyEdge }, O
-  ](implicit 
+  ](implicit
     toBlueprintsQuery: ToBlueprintsPredicate[P],
     packValue: ValueContainer[InE[P]#Out#Container, JIterable[TitanEdge]] { type Out = O }
   ):  EvalPathOn[TitanVertex, InE[P], O] =
   new EvalPathOn[TitanVertex, InE[P], O] {
     def apply(path: Path)(in: In): Out = {
       (path.out: Path#Out) := packValue(
-        toBlueprintsQuery(path.predicate, 
+        toBlueprintsQuery(path.predicate,
           in.value.query
             .labels(path.predicate.element.label)
             .direction(Direction.IN)
@@ -203,7 +203,7 @@ case object evals {
   new EvalPathOn[TitanVertex, OutE[P], O] {
     def apply(path: Path)(in: In): Out = {
       (path.out: Path#Out) := packValue(
-        toBlueprintsQuery(path.predicate, 
+        toBlueprintsQuery(path.predicate,
           in.value.query
             .labels(path.predicate.element.label)
             .direction(Direction.OUT)
@@ -222,7 +222,7 @@ case object evals {
   new EvalPathOn[TitanVertex, InV[P], O] {
     def apply(path: Path)(in: In): Out = {
       (path.out: Path#Out) := packValue(
-        toBlueprintsQuery(path.predicate, 
+        toBlueprintsQuery(path.predicate,
           in.value.query
             .labels(path.predicate.element.label)
             .direction(Direction.IN)
@@ -241,7 +241,7 @@ case object evals {
   new EvalPathOn[TitanVertex, OutV[P], O] {
     def apply(path: Path)(in: In): Out = {
       (path.out: Path#Out) := packValue(
-        toBlueprintsQuery(path.predicate, 
+        toBlueprintsQuery(path.predicate,
           in.value.query
             .labels(path.predicate.element.label)
             .direction(Direction.OUT)

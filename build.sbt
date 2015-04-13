@@ -5,8 +5,8 @@ description   := "Scarph evaluators for TitanDB"
 organization  := "ohnosequences"
 bucketSuffix  := "era7.com"
 
-scalaVersion        := "2.11.5"
-crossScalaVersions  := Seq("2.10.4")
+scalaVersion        := "2.11.6"
+crossScalaVersions  := Seq("2.10.5")
 
 libraryDependencies ++= Seq(
   CrossVersion.partialVersion(scalaVersion.value) match {
@@ -14,7 +14,8 @@ libraryDependencies ++= Seq(
               "com.chuusai" %% "shapeless" % "2.0.0"
     case _ => "com.chuusai"  % "shapeless" % "2.0.0" cross CrossVersion.full
   },
-  "ohnosequences"           %% "cosas"       % "0.6.0-SNAPSHOT",
+  "ohnosequences"           %% "cosas"       % "0.6.0",
+  "ohnosequences"           %% "scarph"      % "0.5.0.new-syntax-SNAPSHOT",
   // "org.scalaz"              %% "scalaz-core" % "7.1.0",
   "com.thinkaurelius.titan" %  "titan-core"  % "0.5.3",
   "org.scalatest"           %% "scalatest"   % "2.2.4" % Test,
@@ -26,4 +27,4 @@ libraryDependencies ++= Seq(
 testOptions in Test += Tests.Argument("-oD")
 
 // no name hashing, funny stuff happens
-incOptions := incOptions.value.withNameHashing(false)
+//incOptions := incOptions.value.withNameHashing(false)*/

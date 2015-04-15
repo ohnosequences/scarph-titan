@@ -92,6 +92,40 @@ case object implementations {
       def apply(): Raw = TitanVals[V](Seq())
     }
 
+    implicit def vertexOutImpl[E <: AnyEdge]:
+        VertexOutImpl[E, TitanVertices, TitanEdges, TitanVertices] =
+    new VertexOutImpl[E, TitanVertices, TitanEdges, TitanVertices] {
+
+      def outE(v: RawVertex, e: Edge): RawOutEdge = TitanVals(asJavaIterable(
+        v.values.flatMap{
+          _.query.labels(e.label).direction(Direction.OUT).titanEdges
+        }
+      ))
+
+      def outV(v: RawVertex, e: Edge): RawOutVertex = TitanVals(asJavaIterable(
+        v.values.flatMap{
+          _.query.labels(e.label).direction(Direction.OUT).vertexIds
+        }
+      ))
+    }
+
+    implicit def vertexInImpl[E <: AnyEdge]:
+        VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] =
+    new VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] {
+
+      def inE(v: RawVertex, e: Edge): RawInEdge = TitanVals(asJavaIterable(
+        v.values.flatMap{
+          _.query.labels(e.label).direction(Direction.IN).titanEdges
+        }
+      ))
+
+      def inV(v: RawVertex, e: Edge): RawInVertex = TitanVals(asJavaIterable(
+        v.values.flatMap{
+          _.query.labels(e.label).direction(Direction.IN).vertexIds
+        }
+      ))
+    }
+
   }
 
 }

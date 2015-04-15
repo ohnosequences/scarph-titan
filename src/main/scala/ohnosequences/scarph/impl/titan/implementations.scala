@@ -31,13 +31,28 @@ case object implementations {
     type TitanEdges = TitanVals[titan.TitanEdge]
 
     // TODO: should work also for properties and predicates
-    implicit def unitVertexImpl[V <: AnyVertex, O <: AnyTitanVals]:
-        UnitImpl[V, O, titan.TitanGraph] =
-    new UnitImpl[V, O, titan.TitanGraph] {
+    implicit def unitVertexImpl[V <: AnyVertex]:
+        UnitImpl[V, TitanVertices, titan.TitanGraph] =
+    new UnitImpl[V, TitanVertices, titan.TitanGraph] {
 
       def toUnit(o: RawObject): RawUnit = graph
-      // TODO: return all vertices of this type
-      def fromUnit(u: RawUnit, o: Object): RawObject = ???
+
+      def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
+        graph.query.has("label", o.label).vertices
+          .asInstanceOf[Container[titan.TitanVertex]]
+      )
+    }
+
+    implicit def unitEdgeImpl[E <: AnyEdge]:
+        UnitImpl[E, TitanEdges, titan.TitanGraph] =
+    new UnitImpl[E, TitanEdges, titan.TitanGraph] {
+
+      def toUnit(o: RawObject): RawUnit = graph
+
+      def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
+        graph.query.has("label", o.label).edges
+          .asInstanceOf[Container[titan.TitanEdge]]
+      )
     }
 
 

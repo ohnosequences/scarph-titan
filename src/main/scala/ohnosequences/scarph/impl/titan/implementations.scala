@@ -3,6 +3,7 @@ package ohnosequences.scarph.impl.titan
 case object implementations {
 
   import com.thinkaurelius.titan.{ core => titan } //, schema._
+  import com.tinkerpop.blueprints.Direction
   import scala.collection.JavaConversions._
   // import java.lang.Iterable
 
@@ -49,9 +50,11 @@ case object implementations {
         e.values.map{ _.getProperty[P#Raw](p.label) }
       ))
 
-      def lookup(r: RawValue, p: Property): RawElement = TitanVals(r.values.map { v =>
-        graph.query.has(p.label, v).vertices
-      }.asInstanceOf[Container[titan.TitanVertex]])
+      def lookup(r: RawValue, p: Property): RawElement = TitanVals(
+        r.values.map { v =>
+          graph.query.has(p.label, v).vertices
+        }.asInstanceOf[Container[titan.TitanVertex]]
+      )
     }
 
     implicit def edgePropertyImpl[P <: AnyGraphProperty]:
@@ -64,9 +67,22 @@ case object implementations {
 
       def lookup(r: RawValue, p: Property): RawElement = TitanVals(
         r.values.flatMap { v =>
-          graph.query.has(p.label, v).vertices
+          graph.query.has(p.label, v).edges
         }.asInstanceOf[Container[titan.TitanEdge]]
       )
+    }
+
+    implicit def edgeImpl:
+        EdgeImpl[TitanEdges, TitanVertices, TitanVertices] =
+    new EdgeImpl[TitanEdges, TitanVertices, TitanVertices] {
+
+      def source(e: RawEdge): RawSource = TitanVals(asJavaIterable(
+        e.values.map{ _.getVertex(Direction.OUT) }
+      ))
+
+      def target(e: RawEdge): RawTarget = TitanVals(asJavaIterable(
+        e.values.map{ _.getVertex(Direction.IN) }
+      ))
     }
 
   }

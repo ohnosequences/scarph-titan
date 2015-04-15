@@ -85,6 +85,13 @@ case object implementations {
       ))
     }
 
+    implicit def zeroImpl[V]:
+        ZeroImpl[TitanVals[V]] =
+    new ZeroImpl[TitanVals[V]] {
+
+      def apply(): Raw = TitanVals[V](Seq())
+    }
+
   }
 
 }

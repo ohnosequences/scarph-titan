@@ -25,6 +25,7 @@ case object implementations {
   case class TitanVals[T](val values: Container[T])
     extends AnyVal with AnyTitanVals { type Obj = T }
 
+  import titan.{TitanVertex, TitanEdge, TitanElement}
   type TitanVertices = TitanVals[titan.TitanVertex]
   type TitanEdges = TitanVals[titan.TitanEdge]
   type TitanGraph = titan.TitanGraph
@@ -35,68 +36,48 @@ case object implementations {
     def g: TitanGraph
   }
 
-  case class TitanUnitImpl[V <: AnyVertex](val g: TitanGraph) 
-    extends AnyVal with AnyTGraph with UnitImpl[V, TitanVertices, TitanGraph]  {
+  case class TitanUnitImpl[E <: AnyGraphElement, TE <: TitanElement](val g: TitanGraph) 
+    extends AnyVal with AnyTGraph with UnitImpl[E, TitanVals[TE], TitanGraph]  {
 
     // TODO a better Unit type here
     final def toUnit(o: RawObject): RawUnit = g
 
     final def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
       g.query.has("label", o.label).vertices
-        .asInstanceOf[Container[titan.TitanVertex]]
+        .asInstanceOf[Container[TE]]
     )
   }
 
-  
+  case class TitanPropertyImpl[P <: AnyGraphProperty, TE <: TitanElement](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with PropertyImpl[P, TitanVals[TE], TitanVals[P#Raw]] {
+
+    final def get(e: RawElement, p: Property): RawValue = TitanVals(asJavaIterable(
+        e.values.map{ _.getProperty[P#Raw](p.label) }
+      ))
+
+    final def lookup(r: RawValue, p: Property): RawElement = TitanVals(
+        r.values.flatMap { v =>
+          g.query.has(p.label, v).edges
+        }.asInstanceOf[Container[TE]]
+      )
+  }
+
+
 
   case class TitanImpls(val graph: titan.TitanGraph) {
  
     // TODO: should work also for properties and predicates
-    implicit def unitVertexImpl[V <: AnyVertex]: TitanUnitImpl[V] = TitanUnitImpl(graph)
+    implicit def unitVertexImpl[V <: AnyVertex]: TitanUnitImpl[V, TitanVertex] = TitanUnitImpl(graph)
     
+    implicit def unitEdgeImpl[E <: AnyEdge]: TitanUnitImpl[E, TitanEdge] = TitanUnitImpl(graph)
 
-    implicit def unitEdgeImpl[E <: AnyEdge]:
-        UnitImpl[E, TitanEdges, titan.TitanGraph] =
-    new UnitImpl[E, TitanEdges, titan.TitanGraph] {
+    implicit def vertexPropertyImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }]:
+      TitanPropertyImpl[P, TitanVertex] =
+      TitanPropertyImpl(graph)
 
-      def toUnit(o: RawObject): RawUnit = graph
-
-      def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
-        graph.query.has("label", o.label).edges
-          .asInstanceOf[Container[titan.TitanEdge]]
-      )
-    }
-
-
-    implicit def vertexPropertyImpl[P <: AnyGraphProperty]:
-        PropertyImpl[P, TitanVals[titan.TitanVertex], TitanVals[P#Raw]] =
-    new PropertyImpl[P, TitanVals[titan.TitanVertex], TitanVals[P#Raw]] {
-
-      def get(e: RawElement, p: Property): RawValue = TitanVals(asJavaIterable(
-        e.values.map{ _.getProperty[P#Raw](p.label) }
-      ))
-
-      def lookup(r: RawValue, p: Property): RawElement = TitanVals(
-        r.values.map { v =>
-          graph.query.has(p.label, v).vertices
-        }.asInstanceOf[Container[titan.TitanVertex]]
-      )
-    }
-
-    implicit def edgePropertyImpl[P <: AnyGraphProperty]:
-        PropertyImpl[P, TitanEdges, TitanVals[P#Raw]] =
-    new PropertyImpl[P, TitanEdges, TitanVals[P#Raw]] {
-
-      def get(e: RawElement, p: Property): RawValue = TitanVals(asJavaIterable(
-        e.values.map{ _.getProperty[P#Raw](p.label) }
-      ))
-
-      def lookup(r: RawValue, p: Property): RawElement = TitanVals(
-        r.values.flatMap { v =>
-          graph.query.has(p.label, v).edges
-        }.asInstanceOf[Container[titan.TitanEdge]]
-      )
-    }
+    implicit def edgePropertyImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }]:
+      TitanPropertyImpl[P, TitanEdge] =
+      TitanPropertyImpl(graph)
 
     implicit def edgeImpl:
         EdgeImpl[TitanEdges, TitanVertices, TitanVertices] =

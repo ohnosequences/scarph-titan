@@ -38,7 +38,7 @@ case object types {
     @inline final def isLeft = true
     @inline final def isRight = false
   }
-  case class right[L,R](val values: Container[L]) extends either[L,R] {
+  case class right[L,R](val values: Container[R]) extends either[L,R] {
 
     type Obj = R
 

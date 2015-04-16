@@ -4,8 +4,9 @@ case object types {
 
 
   import com.thinkaurelius.titan.{ core => titan } 
-  
+
   type Container[T] = java.lang.Iterable[T]
+  import java.util.Iterator
 
   trait AnyTitanVals extends Any {
 
@@ -19,6 +20,11 @@ case object types {
   type TitanVertices = TitanVals[titan.TitanVertex]
   type TitanEdges = TitanVals[titan.TitanEdge]
   type TitanGraph = titan.TitanGraph
+
+  sealed trait product[L,R] extends Any with AnyTitanVals {
+
+    type Obj = (L,R)
+  }
 
   sealed trait either[L,R] extends Any with AnyTitanVals {
 

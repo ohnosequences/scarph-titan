@@ -14,34 +14,46 @@ case object implementations {
   import s.graphTypes._, s.morphisms._, s.implementations._
   // import s.impl.titan.predicates._
 
+  type Container[T] = java.lang.Iterable[T]
+
+  trait AnyTitanVals extends Any {
+
+    type Obj
+    def values: Container[Obj]
+  }
+
+  case class TitanVals[T](val values: Container[T])
+    extends AnyVal with AnyTitanVals { type Obj = T }
+
+  type TitanVertices = TitanVals[titan.TitanVertex]
+  type TitanEdges = TitanVals[titan.TitanEdge]
+  type TitanGraph = titan.TitanGraph
+
+
+  trait AnyTGraph extends Any {
+
+    def g: TitanGraph
+  }
+
+  case class TitanUnitImpl[V <: AnyVertex](val g: TitanGraph) 
+    extends AnyVal with AnyTGraph with UnitImpl[V, TitanVertices, TitanGraph]  {
+
+    // TODO a better Unit type here
+    final def toUnit(o: RawObject): RawUnit = g
+
+    final def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
+      g.query.has("label", o.label).vertices
+        .asInstanceOf[Container[titan.TitanVertex]]
+    )
+  }
+
+  
+
   case class TitanImpls(val graph: titan.TitanGraph) {
-
-    type Container[T] = java.lang.Iterable[T]
-
-    trait AnyTitanVals {
-
-      type Obj
-      val values: Container[Obj]
-    }
-
-    case class TitanVals[T](val values: Container[T])
-      extends AnyTitanVals { type Obj = T }
-
-    type TitanVertices = TitanVals[titan.TitanVertex]
-    type TitanEdges = TitanVals[titan.TitanEdge]
-
+ 
     // TODO: should work also for properties and predicates
-    implicit def unitVertexImpl[V <: AnyVertex]:
-        UnitImpl[V, TitanVertices, titan.TitanGraph] =
-    new UnitImpl[V, TitanVertices, titan.TitanGraph] {
-
-      def toUnit(o: RawObject): RawUnit = graph
-
-      def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
-        graph.query.has("label", o.label).vertices
-          .asInstanceOf[Container[titan.TitanVertex]]
-      )
-    }
+    implicit def unitVertexImpl[V <: AnyVertex]: TitanUnitImpl[V] = TitanUnitImpl(graph)
+    
 
     implicit def unitEdgeImpl[E <: AnyEdge]:
         UnitImpl[E, TitanEdges, titan.TitanGraph] =
@@ -54,7 +66,6 @@ case object implementations {
           .asInstanceOf[Container[titan.TitanEdge]]
       )
     }
-
 
 
     implicit def vertexPropertyImpl[P <: AnyGraphProperty]:

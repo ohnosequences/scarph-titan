@@ -13,22 +13,10 @@ case object implementations {
   import ohnosequences.{ scarph => s }
   import s.graphTypes._, s.morphisms._, s.implementations._
   // import s.impl.titan.predicates._
-
-  type Container[T] = java.lang.Iterable[T]
-
-  trait AnyTitanVals extends Any {
-
-    type Obj
-    def values: Container[Obj]
-  }
-
-  case class TitanVals[T](val values: Container[T])
-    extends AnyVal with AnyTitanVals { type Obj = T }
-
   import titan.{TitanVertex, TitanEdge, TitanElement}
-  type TitanVertices = TitanVals[titan.TitanVertex]
-  type TitanEdges = TitanVals[titan.TitanEdge]
-  type TitanGraph = titan.TitanGraph
+
+  import ohnosequences.scarph.impl.titan.types._
+  
 
 
   trait AnyTGraph extends Any {
@@ -40,7 +28,7 @@ case object implementations {
     extends AnyVal with AnyTGraph with UnitImpl[E, TitanVals[TE], TitanGraph]  {
 
     // TODO a better Unit type here
-    final def toUnit(o: RawObject): RawUnit = g
+    @inline final def toUnit(o: RawObject): RawUnit = g
 
     final def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
       g.query.has("label", o.label).vertices

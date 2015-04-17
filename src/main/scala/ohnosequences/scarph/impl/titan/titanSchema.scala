@@ -14,40 +14,16 @@ object titanSchema {
 
   final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity = a.sourceArity match {
 
-    case OneOrNone(_)    => a.targetArity match {
+    case OneOrNone(_) | ExactlyOne(_)   => a.targetArity match {
 
-      case OneOrNone(_)  => Multiplicity.ONE2ONE
-      case ExactlyOne(_) => Multiplicity.ONE2ONE
-
-      case AtLeastOne(_) => Multiplicity.ONE2MANY
-      case ManyOrNone(_) => Multiplicity.ONE2MANY
+      case OneOrNone(_)  | ExactlyOne(_)  => Multiplicity.ONE2ONE
+      case AtLeastOne(_) | ManyOrNone(_)  => Multiplicity.ONE2MANY
     }
 
-    case ExactlyOne(_)   => a.targetArity match {
+    case AtLeastOne(_) | ManyOrNone(_)  => a.targetArity match {
 
-      case OneOrNone(_)  => Multiplicity.ONE2ONE
-      case ExactlyOne(_) => Multiplicity.ONE2ONE
-
-      case AtLeastOne(_) => Multiplicity.ONE2MANY
-      case ManyOrNone(_) => Multiplicity.ONE2MANY
-    }
-
-    case AtLeastOne(_)    => a.targetArity match {
-
-      case OneOrNone(_)   => Multiplicity.MANY2ONE
-      case ExactlyOne(_)  => Multiplicity.MANY2ONE
-
-      case AtLeastOne(_)  => Multiplicity.MULTI
-      case ManyOrNone(_)  => Multiplicity.MULTI
-    }
-
-    case ManyOrNone(_)    => a.targetArity match {
-
-      case OneOrNone(_)   => Multiplicity.MANY2ONE
-      case ExactlyOne(_)  => Multiplicity.MANY2ONE
-
-      case AtLeastOne(_)  => Multiplicity.MULTI
-      case ManyOrNone(_)  => Multiplicity.MULTI
+      case OneOrNone(_)  | ExactlyOne(_)  => Multiplicity.MANY2ONE
+      case AtLeastOne(_) | ManyOrNone(_)  => Multiplicity.MULTI
     }
   }
 

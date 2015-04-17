@@ -15,6 +15,8 @@ object schemaTests {
   case object uh extends ValueOfType[String]("uh")
   case object ah extends Vertex("hola!") {
     case object name extends Property(ah -> uh)("argh")
+    case object aaaa extends Property(ah -> uh)("aaaa")
+    case object bbbb extends Property(ah -> uh)("bbbb")
   }
 }
 
@@ -31,22 +33,12 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
   test("properties and TypeTags") {
 
-    import schemaTests._
     import ohnosequences.scarph.impl.titan.titanSchema._
-
-    val zz: AnyGraphProperty = ah.name
-
-    val ss = Set[AnyGraphProperty](ah.name)
-
-    // g.titanPropertyTypeFor(ah.name)
-
-    implicitly[String =:= ah.name.Value#Raw]
-
-    ss map { x => g.titanPropertyTypeFor(x) }
-
     import ohnosequences.scarph.test._
 
-    twitter.properties map { g.titanPropertyTypeFor(_) } 
+    // twitter.properties map { g.titanPropertyTypeFor } 
+    twitter.vertices   map { g.titanVertexTypeFor   }
+    twitter.edges      map { g.titanEdgeTypeFor     }
   }
 
 

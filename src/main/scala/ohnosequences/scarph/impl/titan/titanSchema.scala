@@ -5,7 +5,7 @@ object titanSchema {
   import ohnosequences.scarph.schemas._
   import ohnosequences.scarph.graphTypes._
   import com.thinkaurelius.titan.{ core => titan }
-  import titan.TitanGraph 
+  import titan.TitanGraph
   import titan.schema.TitanManagement
   import titan.Multiplicity
 
@@ -32,13 +32,13 @@ object titanSchema {
   final case class TitanGraphSchemaOps(val g: TitanGraph) extends AnyVal {
 
     // TODO return errors
-    final def titanPropertyTypeFor(p: AnyGraphProperty): Unit = {
-      
-      println(s"Creating property type for ${p}, with value type ${p.value.rawTag}")
+    final def titanPropertyTypeFor(v: AnyValueType): Unit = {
+
+      println(s"Creating property type for ${v.label}, with value type ${v.rawTag}")
       val mgmt = g.getManagementSystem
 
-      mgmt.makePropertyKey(p.label)
-        .dataType(p.value.rawTag.runtimeClass)
+      mgmt.makePropertyKey(v.label)
+        .dataType(v.rawTag.runtimeClass)
         .make()
 
       mgmt.commit
@@ -68,7 +68,7 @@ object titanSchema {
     }
   }
 
-  implicit final def scarphSchemaTitanOps(schema: AnyGraphSchema): ScarphSchemaTitanOps = ScarphSchemaTitanOps(schema) 
+  implicit final def scarphSchemaTitanOps(schema: AnyGraphSchema): ScarphSchemaTitanOps = ScarphSchemaTitanOps(schema)
   case class ScarphSchemaTitanOps(val schema: AnyGraphSchema) extends AnyVal {
 
     // TODO errors
@@ -76,7 +76,7 @@ object titanSchema {
 
       schema.vertices   map g.titanVertexTypeFor
       schema.edges      map g.titanEdgeTypeFor
-      schema.properties map g.titanPropertyTypeFor
+      schema.valueTypes map g.titanPropertyTypeFor
     }
   }
 }

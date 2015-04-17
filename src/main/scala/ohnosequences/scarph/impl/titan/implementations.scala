@@ -67,7 +67,12 @@ case object implementations {
       e map { _.getProperty[P#Value#Raw](p.label) }
 
     final def lookup(r: RawValue, p: Property): RawElement =
-      r flatMap { v => g.query.has(p.label, v).vertices.asInstanceOf[Iterable[TitanVertex]] }
+      r flatMap { v => 
+        g.query.has(p.label, v)
+        .vertices
+        .asInstanceOf[JIterable[TitanVertex]]
+        .asContainer
+      }
   }
 
   case class TitanPropertyEdgeImpl[
@@ -83,7 +88,12 @@ case object implementations {
       e map { _.getProperty[P#Value#Raw](p.label) }
 
     final def lookup(r: RawValue, p: Property): RawElement =
-      r flatMap { v => g.query.has(p.label, v).edges.asInstanceOf[Iterable[TitanEdge]] }
+      r flatMap { v => 
+        g.query.has(p.label, v)
+        .edges
+        .asInstanceOf[JIterable[TitanEdge]]
+        .asContainer
+      }
   }
 
   case class TitanEdgeImpl(val g: TitanGraph)

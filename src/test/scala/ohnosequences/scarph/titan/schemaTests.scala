@@ -77,7 +77,12 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     val query = lookup(user.name) //.get(user.age)
 
-    println(query.evalOn(name := (Seq("@laughedelic"): Container[String]))(eval_lookup(TitanPropertyVertexImpl[user.name.type](g))))
+    println(
+      query.evalOn( name := (Seq("@laughedelic"): Container[String]) )(
+        eval_lookup( TitanPropertyVertexImpl[user.name.type](g) )
+      )
+      .value.map { x => x.toString }
+    )
   }
 
 }

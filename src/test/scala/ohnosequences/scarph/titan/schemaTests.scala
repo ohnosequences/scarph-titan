@@ -3,7 +3,7 @@ package ohnosequences.scarph.impl.titan.test
 import ohnosequences.scarph.schemas._
 import ohnosequences.scarph.graphTypes._
 import com.thinkaurelius.titan.{ core => titan }
-import titan.TitanGraph 
+import titan.TitanGraph
 import titan.schema.TitanManagement
 
 import scala.reflect.runtime.universe._
@@ -46,7 +46,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   override final def beforeAll() {
 
     g = TitanFactory.open("berkeleyje:" + graphLocation.getAbsolutePath)
-    
+
     def cleanDir(f: File) {
       if (f.isDirectory) f.listFiles.foreach(cleanDir(_))
       else { println(f.toString); f.delete }
@@ -63,4 +63,19 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       println("Shutdown Titan graph")
     }
   }
+
+  test("foo") {
+    import ohnosequences.scarph._, evals._, morphisms._, syntax.morphisms._
+    import ohnosequences.scarph.test._, twitter._
+    import ohnosequences.scarph.impl.titan.evals._
+
+    object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
+    import titanTwitterEvals._
+
+
+    val query = lookup(user.name) //.get(user.age)
+
+    println(query.evalOn(name := "@laughedelic")(eval_lookup))
+  }
+
 }

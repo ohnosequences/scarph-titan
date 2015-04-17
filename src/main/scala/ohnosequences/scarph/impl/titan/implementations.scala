@@ -9,7 +9,7 @@ case object implementations {
   import s.graphTypes._, s.morphisms._, s.implementations._
   import titan.{TitanVertex, TitanEdge, TitanElement}
   import ohnosequences.scarph.impl.titan.types._
-  
+
 
   trait AnyTGraph extends Any {
 
@@ -40,54 +40,53 @@ case object implementations {
     @inline final def rightProj(t: RawTensor): RawRight = t.right
   }
 
-  case class TitanUnitImpl[E <: AnyGraphElement, TE <: TitanElement](val g: TitanGraph) 
+  case class TitanUnitImpl[E <: AnyGraphElement, TE <: TitanElement](val g: TitanGraph)
     extends AnyVal with AnyTGraph with UnitImpl[E, Container[TE], TitanGraph]  {
 
     // TODO a better Unit type here
     @inline final def toUnit(o: RawObject): RawUnit = g
 
-    final def fromUnit(u: RawUnit, o: Object): RawObject = 
+    final def fromUnit(u: RawUnit, o: Object): RawObject =
+      // FIXME: this has to be specific for edges, vertices, etc.
       g.query.has("label", o.label)
         .asInstanceOf[JIterable[TE]]
-        .asContainer  
+        .asContainer
   }
 
   case class TitanPropertyVertexImpl[
-    P <: AnyGraphProperty { type Owner <: AnyVertex },
-    TE <: TitanElement
+    P <: AnyGraphProperty { type Owner <: AnyVertex }
   ]
   (val g: TitanGraph)
-  extends 
-    AnyVal with 
-    AnyTGraph with 
-    PropertyImpl[P, Container[TE], Container[P#Raw]] 
+  extends
+    AnyVal with
+    AnyTGraph with
+    PropertyImpl[P, Container[TitanVertex], Container[P#Raw]]
   {
 
-    final def get(e: RawElement, p: Property): RawValue = 
+    final def get(e: RawElement, p: Property): RawValue =
       e map { _.getProperty[P#Raw](p.label) }
-      
-    final def lookup(r: RawValue, p: Property): RawElement = 
-      r flatMap { v => g.query.has(p.label, v).vertices.asInstanceOf[Iterable[TE]] }   
+
+    final def lookup(r: RawValue, p: Property): RawElement =
+      r flatMap { v => g.query.has(p.label, v).vertices.asInstanceOf[Iterable[TitanVertex]] }
   }
 
   case class TitanPropertyEdgeImpl[
-    P <: AnyGraphProperty { type Owner <: AnyEdge },
-    TE <: TitanElement
+    P <: AnyGraphProperty { type Owner <: AnyEdge }
   ]
   (val g: TitanGraph)
-  extends 
-    AnyVal with 
-    AnyTGraph with 
-    PropertyImpl[P, Container[TE], Container[P#Raw]] {
+  extends
+    AnyVal with
+    AnyTGraph with
+    PropertyImpl[P, Container[TitanEdge], Container[P#Raw]] {
 
-    final def get(e: RawElement, p: Property): RawValue = 
+    final def get(e: RawElement, p: Property): RawValue =
       e map { _.getProperty[P#Raw](p.label) }
 
-    final def lookup(r: RawValue, p: Property): RawElement = 
-      r flatMap { v => g.query.has(p.label, v).edges.asInstanceOf[Iterable[TE]] }
+    final def lookup(r: RawValue, p: Property): RawElement =
+      r flatMap { v => g.query.has(p.label, v).edges.asInstanceOf[Iterable[TitanEdge]] }
   }
 
-  case class TitanEdgeImpl(val g: TitanGraph) 
+  case class TitanEdgeImpl(val g: TitanGraph)
     extends AnyVal with AnyTGraph with EdgeImpl[TitanEdges, TitanVertices, TitanVertices] {
 
     final def source(e: RawEdge): RawSource = e map { _.getVertex(Direction.OUT)  }
@@ -104,7 +103,7 @@ case object implementations {
   case class TitanVertexOutImpl[E <: AnyEdge](val g: TitanGraph)
     extends AnyVal with AnyTGraph with VertexOutImpl[E, TitanVertices, TitanEdges, TitanVertices] {
 
-    final def outE(v: RawVertex, e: Edge): RawOutEdge = 
+    final def outE(v: RawVertex, e: Edge): RawOutEdge =
       v flatMap {
         _.query
           .labels(e.label)
@@ -113,7 +112,7 @@ case object implementations {
           .asContainer
       }
 
-    final def outV(v: RawVertex, e: Edge): RawOutVertex = 
+    final def outV(v: RawVertex, e: Edge): RawOutVertex =
       v flatMap {
         _.query
           .labels(e.label)
@@ -126,7 +125,7 @@ case object implementations {
   case class TitanVertexInImpl[E <: AnyEdge](val g: TitanGraph)
     extends AnyVal with AnyTGraph with VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] {
 
-    final def inE(v: RawVertex, e: Edge): RawInEdge = 
+    final def inE(v: RawVertex, e: Edge): RawInEdge =
       v flatMap {
         _.query
           .labels(e.label)
@@ -135,7 +134,7 @@ case object implementations {
           .asContainer
       }
 
-    final def inV(v: RawVertex, e: Edge): RawInVertex = 
+    final def inV(v: RawVertex, e: Edge): RawInVertex =
       v flatMap {
         _.query
           .labels(e.label)

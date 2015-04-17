@@ -60,11 +60,11 @@ case object implementations {
   extends
     AnyVal with
     AnyTGraph with
-    PropertyImpl[P, Container[TitanVertex], Container[P#Raw]]
+    PropertyImpl[P, Container[TitanVertex], Container[P#Value#Raw]]
   {
 
     final def get(e: RawElement, p: Property): RawValue =
-      e map { _.getProperty[P#Raw](p.label) }
+      e map { _.getProperty[P#Value#Raw](p.label) }
 
     final def lookup(r: RawValue, p: Property): RawElement =
       r flatMap { v => g.query.has(p.label, v).vertices.asInstanceOf[Iterable[TitanVertex]] }
@@ -77,10 +77,10 @@ case object implementations {
   extends
     AnyVal with
     AnyTGraph with
-    PropertyImpl[P, Container[TitanEdge], Container[P#Raw]] {
+    PropertyImpl[P, Container[TitanEdge], Container[P#Value#Raw]] {
 
     final def get(e: RawElement, p: Property): RawValue =
-      e map { _.getProperty[P#Raw](p.label) }
+      e map { _.getProperty[P#Value#Raw](p.label) }
 
     final def lookup(r: RawValue, p: Property): RawElement =
       r flatMap { v => g.query.has(p.label, v).edges.asInstanceOf[Iterable[TitanEdge]] }

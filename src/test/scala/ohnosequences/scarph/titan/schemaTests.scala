@@ -68,6 +68,8 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph._, evals._, morphisms._, syntax.morphisms._
     import ohnosequences.scarph.test._, twitter._
     import ohnosequences.scarph.impl.titan.evals._
+    import ohnosequences.scarph.impl.titan.implementations._
+    import ohnosequences.scarph.impl.titan.types._
 
     object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
     import titanTwitterEvals._
@@ -75,7 +77,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     val query = lookup(user.name) //.get(user.age)
 
-    println(query.evalOn(name := "@laughedelic")(eval_lookup))
+    println(query.evalOn(name := (Seq("@laughedelic"): Container[String]))(eval_lookup(TitanPropertyVertexImpl[user.name.type](g))))
   }
 
 }

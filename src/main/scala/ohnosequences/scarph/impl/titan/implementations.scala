@@ -2,139 +2,147 @@ package ohnosequences.scarph.impl.titan
 
 case object implementations {
 
-  import com.thinkaurelius.titan.{ core => titan } //, schema._
+  import com.thinkaurelius.titan.{ core => titan }
   import com.tinkerpop.blueprints.Direction
-  import scala.collection.JavaConversions._
-  // import java.lang.Iterable
-
-  import ohnosequences.cosas._, fns._, types._
-  // import cosas.ops.typeSets._
 
   import ohnosequences.{ scarph => s }
   import s.graphTypes._, s.morphisms._, s.implementations._
-  // import s.impl.titan.predicates._
   import titan.{TitanVertex, TitanEdge, TitanElement}
-
   import ohnosequences.scarph.impl.titan.types._
   
-
 
   trait AnyTGraph extends Any {
 
     def g: TitanGraph
   }
 
+  case class TitanBiproductImpl[L,R]() extends BiproductImpl[TitanBiproduct[L,R], Container[L],Container[R]] {
+
+    @inline final def apply(l: RawLeft, r: RawRight): RawBiproduct = TitanBiproduct( (l,r) )
+
+    @inline final def leftProj(b: RawBiproduct): RawLeft = b.left
+    @inline final def leftInj(l: RawLeft): RawBiproduct = TitanBiproduct( (l, Seq()) )
+
+    @inline final def rightProj(b: RawBiproduct): RawRight = b.right
+    @inline final def rightInj(r: RawRight): RawBiproduct = TitanBiproduct( (Seq(), r) )
+  }
+
+  case class TitanTensorImpl[L,R]() extends AnyTensorImpl {
+
+    type RawTensor = TitanTensor[L,R]
+
+    @inline final def apply(l: RawLeft, r: RawRight): RawTensor = TitanTensor(l,r)
+
+    type RawLeft = Container[L]
+    @inline final def leftProj(t: RawTensor): RawLeft = t.left
+
+    type RawRight = Container[R]
+    @inline final def rightProj(t: RawTensor): RawRight = t.right
+  }
+
   case class TitanUnitImpl[E <: AnyGraphElement, TE <: TitanElement](val g: TitanGraph) 
-    extends AnyVal with AnyTGraph with UnitImpl[E, TitanVals[TE], TitanGraph]  {
+    extends AnyVal with AnyTGraph with UnitImpl[E, Container[TE], TitanGraph]  {
 
     // TODO a better Unit type here
     @inline final def toUnit(o: RawObject): RawUnit = g
 
-    final def fromUnit(u: RawUnit, o: Object): RawObject = TitanVals(
+    final def fromUnit(u: RawUnit, o: Object): RawObject = 
       g.query.has("label", o.label)
-        .asInstanceOf[Container[TE]]
-    )
+        .asInstanceOf[JIterable[TE]]
+        .asContainer  
   }
 
-  case class TitanPropertyVertexImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }, TE <: TitanElement](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with PropertyImpl[P, TitanVals[TE], TitanVals[P#Raw]] {
+  case class TitanPropertyVertexImpl[
+    P <: AnyGraphProperty { type Owner <: AnyVertex },
+    TE <: TitanElement
+  ]
+  (val g: TitanGraph)
+  extends 
+    AnyVal with 
+    AnyTGraph with 
+    PropertyImpl[P, Container[TE], Container[P#Raw]] 
+  {
 
-    final def get(e: RawElement, p: Property): RawValue = TitanVals(asJavaIterable(
-        e.values.map{ _.getProperty[P#Raw](p.label) }
-      ))
-
-    final def lookup(r: RawValue, p: Property): RawElement = TitanVals(
-        r.values.flatMap { v =>
-          g.query.has(p.label, v).vertices
-        }.asInstanceOf[Container[TE]]
-      )
+    final def get(e: RawElement, p: Property): RawValue = 
+      e map { _.getProperty[P#Raw](p.label) }
+      
+    final def lookup(r: RawValue, p: Property): RawElement = 
+      r flatMap { v => g.query.has(p.label, v).vertices.asInstanceOf[Iterable[TE]] }   
   }
 
-  case class TitanPropertyEdgeImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }, TE <: TitanElement](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with PropertyImpl[P, TitanVals[TE], TitanVals[P#Raw]] {
+  case class TitanPropertyEdgeImpl[
+    P <: AnyGraphProperty { type Owner <: AnyEdge },
+    TE <: TitanElement
+  ]
+  (val g: TitanGraph)
+  extends 
+    AnyVal with 
+    AnyTGraph with 
+    PropertyImpl[P, Container[TE], Container[P#Raw]] {
 
-    final def get(e: RawElement, p: Property): RawValue = TitanVals(asJavaIterable(
-        e.values.map{ _.getProperty[P#Raw](p.label) }
-      ))
+    final def get(e: RawElement, p: Property): RawValue = 
+      e map { _.getProperty[P#Raw](p.label) }
 
-    final def lookup(r: RawValue, p: Property): RawElement = TitanVals(
-        r.values.flatMap { v =>
-          g.query.has(p.label, v).edges
-        }.asInstanceOf[Container[TE]]
-      )
+    final def lookup(r: RawValue, p: Property): RawElement = 
+      r flatMap { v => g.query.has(p.label, v).edges.asInstanceOf[Iterable[TE]] }
+  }
+
+  case class TitanEdgeImpl(val g: TitanGraph) 
+    extends AnyVal with AnyTGraph with EdgeImpl[TitanEdges, TitanVertices, TitanVertices] {
+
+    final def source(e: RawEdge): RawSource = e map { _.getVertex(Direction.OUT)  }
+
+    final def target(e: RawEdge): RawTarget = e map { _.getVertex(Direction.IN)   }
+  }
+
+  case class TitanZeroImpl[T](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with ZeroImpl[Container[T]] {
+
+    @inline final def apply(): Raw = zero
   }
 
 
+  case class TitanVertexOutImpl[E <: AnyEdge](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with VertexOutImpl[E, TitanVertices, TitanEdges, TitanVertices] {
 
-  case class TitanImpls(val graph: titan.TitanGraph) {
- 
-    // TODO: should work also for properties and predicates
-    implicit def unitVertexImpl[V <: AnyVertex]: TitanUnitImpl[V, TitanVertex] = TitanUnitImpl(graph)
-    
-    implicit def unitEdgeImpl[E <: AnyEdge]: TitanUnitImpl[E, TitanEdge] = TitanUnitImpl(graph)
+    final def outE(v: RawVertex, e: Edge): RawOutEdge = 
+      v flatMap {
+        _.query
+          .labels(e.label)
+          .direction(Direction.OUT)
+          .titanEdges
+          .asContainer
+      }
 
-    implicit def vertexPropertyImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }]:
-      TitanPropertyVertexImpl[P, TitanVertex] =
-      TitanPropertyVertexImpl(graph)
-
-    implicit def edgePropertyImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }]:
-      TitanPropertyEdgeImpl[P, TitanEdge] =
-      TitanPropertyEdgeImpl(graph)
-
-    implicit def edgeImpl:
-        EdgeImpl[TitanEdges, TitanVertices, TitanVertices] =
-    new EdgeImpl[TitanEdges, TitanVertices, TitanVertices] {
-
-      def source(e: RawEdge): RawSource = TitanVals(asJavaIterable(
-        e.values.map{ _.getVertex(Direction.OUT) }
-      ))
-
-      def target(e: RawEdge): RawTarget = TitanVals(asJavaIterable(
-        e.values.map{ _.getVertex(Direction.IN) }
-      ))
-    }
-
-    implicit def zeroImpl[V]:
-        ZeroImpl[TitanVals[V]] =
-    new ZeroImpl[TitanVals[V]] {
-
-      def apply(): Raw = TitanVals[V](Seq())
-    }
-
-    implicit def vertexOutImpl[E <: AnyEdge]:
-        VertexOutImpl[E, TitanVertices, TitanEdges, TitanVertices] =
-    new VertexOutImpl[E, TitanVertices, TitanEdges, TitanVertices] {
-
-      def outE(v: RawVertex, e: Edge): RawOutEdge = TitanVals(asJavaIterable(
-        v.values.flatMap{
-          _.query.labels(e.label).direction(Direction.OUT).titanEdges
-        }
-      ))
-
-      def outV(v: RawVertex, e: Edge): RawOutVertex = TitanVals(asJavaIterable(
-        v.values.flatMap{
-          _.query.labels(e.label).direction(Direction.OUT).vertexIds
-        }
-      ))
-    }
-
-    implicit def vertexInImpl[E <: AnyEdge]:
-        VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] =
-    new VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] {
-
-      def inE(v: RawVertex, e: Edge): RawInEdge = TitanVals(asJavaIterable(
-        v.values.flatMap{
-          _.query.labels(e.label).direction(Direction.IN).titanEdges
-        }
-      ))
-
-      def inV(v: RawVertex, e: Edge): RawInVertex = TitanVals(asJavaIterable(
-        v.values.flatMap{
-          _.query.labels(e.label).direction(Direction.IN).vertexIds
-        }
-      ))
-    }
-
+    final def outV(v: RawVertex, e: Edge): RawOutVertex = 
+      v flatMap {
+        _.query
+          .labels(e.label)
+          .direction(Direction.OUT)
+          .vertexIds
+          .asContainer
+      }
   }
 
+  case class TitanVertexInImpl[E <: AnyEdge](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] {
+
+    final def inE(v: RawVertex, e: Edge): RawInEdge = 
+      v flatMap {
+        _.query
+          .labels(e.label)
+          .direction(Direction.IN)
+          .titanEdges
+          .asContainer
+      }
+
+    final def inV(v: RawVertex, e: Edge): RawInVertex = 
+      v flatMap {
+        _.query
+          .labels(e.label)
+          .direction(Direction.IN)
+          .vertexIds
+          .asContainer
+      }
+  }
 }

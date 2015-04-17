@@ -2,47 +2,38 @@ package ohnosequences.scarph.impl.titan
 
 case object types {
 
+  import com.thinkaurelius.titan.{ core => titan }
+  import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
 
-  import com.thinkaurelius.titan.{ core => titan } 
+  final type Container[T]   = Iterable[T]
+  final type JIterable[T]   = java.lang.Iterable[T]
+  final type TitanVertices  = Container[titan.TitanVertex]
+  final type TitanEdges     = Container[titan.TitanEdge]
+  final type TitanGraph     = titan.TitanGraph
 
-  type Container[T] = java.lang.Iterable[T]
-  import java.util.Iterator
+  final def zero[T]: Container[T] = Seq() 
 
-  trait AnyTitanVals extends Any {
+  implicit final def containerOps[T](cs: Container[T]): ContainerOps[T] = ContainerOps[T](cs)
+  case class ContainerOps[T](val cs: Container[T]) extends AnyVal {
 
-    type Obj
-    def values: Container[Obj]
+    @inline final def asJIterable: JIterable[T] = cs.asJava
+  }
+  implicit final def jIterableOps[T](ts: JIterable[T]): JIterableOps[T] = JIterableOps[T](ts)
+  case class JIterableOps[T](val ts: JIterable[T]) extends AnyVal {
+
+    @inline final def asContainer: Container[T] = ts.asScala
   }
 
-  case class TitanVals[T](val values: Container[T])
-    extends AnyVal with AnyTitanVals { type Obj = T }
+  case class TitanBiproduct[L,R](val both: (Container[L], Container[R])) extends AnyVal { 
 
-  type TitanVertices = TitanVals[titan.TitanVertex]
-  type TitanEdges = TitanVals[titan.TitanEdge]
-  type TitanGraph = titan.TitanGraph
+    type Left = L
+    type Right = R
 
-  sealed trait product[L,R] extends Any with AnyTitanVals {
+    @inline final def left  = both._1
+    @inline final def right = both._2
 
-    type Obj = (L,R)
+    final def map[X,Y](f: L => X, g: R => Y): TitanBiproduct[X,Y] = TitanBiproduct( (left map f, right map g) )
   }
-
-  sealed trait either[L,R] extends Any with AnyTitanVals {
-
-    def isLeft: Boolean
-    def isRight: Boolean
-  }
-  case class left[L,R](val values: Container[L]) extends either[L,R] {
-
-    type Obj = L
-
-    @inline final def isLeft = true
-    @inline final def isRight = false
-  }
-  case class right[L,R](val values: Container[R]) extends either[L,R] {
-
-    type Obj = R
-
-    @inline final def isLeft = false
-    @inline final def isRight = true
-  }
+  
+  case class TitanTensor[L,R](val left: Container[L], val right: Container[R])
 }

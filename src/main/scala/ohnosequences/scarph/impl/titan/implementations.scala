@@ -101,7 +101,6 @@ case object implementations {
     @inline final def apply(): Raw = zero
   }
 
-
   case class TitanVertexOutImpl[E <: AnyEdge](val g: TitanGraph)
     extends AnyVal with AnyTGraph with VertexOutImpl[E, TitanVertices, TitanEdges, TitanVertices] {
 

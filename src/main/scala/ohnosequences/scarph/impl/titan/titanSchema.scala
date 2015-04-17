@@ -90,22 +90,17 @@ object titanSchema {
 
       mgmt.commit
     }
-      
+  }
 
-    // final def titanVertexTypeFor(v: AnyVertex): Unit = 
-    // final def titanEdgeTypeFor(e: AnyEdge)
+  implicit final def scarphSchemaTitanOps(schema: AnyGraphSchema): ScarphSchemaTitanOps = ScarphSchemaTitanOps(schema) 
+  case class ScarphSchemaTitanOps(val schema: AnyGraphSchema) extends AnyVal {
 
-    
-    // mgmt.makePropertyKey(name.label).dataType(classOf[String]).make();
-    // mgmt.makePropertyKey(age.label).dataType(classOf[Integer]).make();
-    // mgmt.makePropertyKey(text.label).dataType(classOf[String]).make();
-    // mgmt.makePropertyKey(url.label).dataType(classOf[String]).make();
-    // mgmt.makePropertyKey(time.label).dataType(classOf[String]).make();
+    // TODO errors
+    final def createTypesIn(g: TitanGraph)(implicit ops: TitanGraph => TitanGraphSchemaOps): Unit = {
 
-    // mgmt.makeVertexLabel(User.label).make()
-    // mgmt.makeVertexLabel(Tweet.label).make()
-
-    // mgmt.makeEdgeLabel(Posted.label).multiplicity(ONE2MANY).make()
-    // mgmt.makeEdgeLabel(Follows.label).multiplicity(MULTI).make()
+      schema.vertices   map g.titanVertexTypeFor
+      schema.edges      map g.titanEdgeTypeFor
+      schema.properties map g.titanPropertyTypeFor
+    }
   }
 }

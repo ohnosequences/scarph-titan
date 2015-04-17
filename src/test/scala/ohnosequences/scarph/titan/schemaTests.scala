@@ -36,9 +36,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.titanSchema._
     import ohnosequences.scarph.test._
 
-    // twitter.properties map { g.titanPropertyTypeFor } 
-    twitter.vertices   map { g.titanVertexTypeFor   }
-    twitter.edges      map { g.titanEdgeTypeFor     }
+    twitter createTypesIn g
   }
 
 

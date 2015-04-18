@@ -31,13 +31,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   val graphLocation = new File("/tmp/titanTest")
   var g: TitanGraph = null
 
-  test("properties and TypeTags") {
-
-    import ohnosequences.scarph.impl.titan.titanSchema._
-    import ohnosequences.scarph.test._
-
-    twitter createTypesIn g
-  }
+  test("properties and TypeTags") {}
 
 
 
@@ -55,6 +49,17 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     g = TitanFactory.open("berkeleyje:" + graphLocation.getAbsolutePath)
 
     println("Created Titan graph")
+
+
+    import ohnosequences.scarph.impl.titan.titanSchema._
+    import ohnosequences.scarph.test._
+
+    twitter createTypesIn g
+
+    import com.tinkerpop.blueprints.util.io.graphson._
+    GraphSONReader.inputGraph(g, this.getClass.getResource("/twitter_graph.json").getPath)
+
+    println("loaded sample Twitter data")
   }
 
   override final def afterAll() {
@@ -65,7 +70,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   }
 
   test("foo") {
-    import ohnosequences.scarph._, evals._, morphisms._, syntax.morphisms._
+    import ohnosequences.scarph._, evals.{ evalSyntax => please, _}, morphisms._, syntax.morphisms._
     import ohnosequences.scarph.test._, twitter._
     import ohnosequences.scarph.impl.titan.evals._
     import ohnosequences.scarph.impl.titan.implementations._
@@ -74,13 +79,10 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
     import titanTwitterEvals._
 
-
-    val query = lookup(user.name) //.get(user.age)
+    val query = lookup(user.name) outV posted inV posted get user.age//.get(user.age)
 
     println(
-      query.evalOn( name := (Seq("@laughedelic"): Container[String]) )(
-        eval_lookup( TitanPropertyVertexImpl[user.name.type](g) )
-      )
+      please(query).runOn( name := (Seq("@laughedelic", "@eparejatobes", "@evdokim"): Container[String]) )
       .value.map { x => x.toString }
     )
   }

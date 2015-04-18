@@ -19,8 +19,10 @@ case object evals {
 
     implicit final def unitEdgeImpl[E <: AnyEdge]: TitanUnitImpl[E, TitanEdge] = TitanUnitImpl(graph)
 
-    implicit final def vertexPropertyImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }]:
-      TitanPropertyVertexImpl[P] =
+    implicit final def vertexPropertyImpl[
+      P0 <: AnyGraphProperty { type Owner <: AnyVertex }
+    ]:
+      TitanPropertyVertexImpl[P0] =
       TitanPropertyVertexImpl(graph)
 
     implicit final def edgePropertyImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }]:

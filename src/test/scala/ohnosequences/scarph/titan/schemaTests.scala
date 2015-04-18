@@ -22,20 +22,35 @@ object schemaTests {
 
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
+  import ohnosequences.scarph._, evals._, morphisms._, syntax.morphisms._
+  import ohnosequences.scarph.impl.titan.evals._
+
+  object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
+  import titanTwitterEvals._
+
+  test("eval basic queries over sample twitter graph") {
+    
+    import ohnosequences.scarph.test._, twitter._
+    import ohnosequences.scarph.impl.titan.implementations._
+    import ohnosequences.scarph.impl.titan.types._
+
+    val query = lookup(user.name) outV posted inV posted get user.age
+
+    implicit def toCont[T](ts: Seq[T]): Container[T] = ts
+
+    lazy val z = evaluate(query) on ( 
+        name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
+      )
+    
+    println( z.value.map { x => x.toString } )    
+  }
+
 
   import java.io.File
   import com.thinkaurelius.titan.core._
-  import com.thinkaurelius.titan.core.Multiplicity._
-  import com.thinkaurelius.titan.core.schema._
 
   val graphLocation = new File("/tmp/titanTest")
   var g: TitanGraph = null
-
-  test("properties and TypeTags") {}
-
-
-
-
 
   override final def beforeAll() {
 
@@ -68,23 +83,4 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       println("Shutdown Titan graph")
     }
   }
-
-  test("foo") {
-    import ohnosequences.scarph._, evals.{ evalSyntax => please, _}, morphisms._, syntax.morphisms._
-    import ohnosequences.scarph.test._, twitter._
-    import ohnosequences.scarph.impl.titan.evals._
-    import ohnosequences.scarph.impl.titan.implementations._
-    import ohnosequences.scarph.impl.titan.types._
-
-    object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
-    import titanTwitterEvals._
-
-    val query = lookup(user.name) outV posted inV posted get user.age//.get(user.age)
-
-    println(
-      please(query).runOn( name := (Seq("@laughedelic", "@eparejatobes", "@evdokim"): Container[String]) )
-      .value.map { x => x.toString }
-    )
-  }
-
 }

@@ -13,9 +13,9 @@
 // import s.test.Twitter._
 
 
-// trait AnyTitanTestSuite 
-//       extends org.scalatest.FunSuite 
-//       with org.scalatest.BeforeAndAfterAll 
+// trait AnyTitanTestSuite
+//       extends org.scalatest.FunSuite
+//       with org.scalatest.BeforeAndAfterAll
 //       with ohnosequences.scarph.test.ScalazEquality {
 
 //   val g: TitanGraph = TitanFactory.open("inmemory")
@@ -87,11 +87,11 @@
 //     val posterName = Source(posted) >=> Get(name)
 //     assert{ posterName.evalOn( post ) == (name := "@eparejatobes") }
 
-//     assertResult( OneOrNone.of(user) := None ){ 
+//     assertResult( OneOrNone.of(user) := None ){
 //       twitter.query(userByNameAndAge, user ? (name === "@eparejatobes") and (age === 5))
 //         .evalOn( titanTwitter )
 //     }
-//     assertResult( OneOrNone.of(user) := Some(edu.value) ){ 
+//     assertResult( OneOrNone.of(user) := Some(edu.value) ){
 //       twitter.query(userByNameAndAge, user ? (age === 95) and (name === "@eparejatobes"))
 //         .evalOn( titanTwitter )
 //     }
@@ -132,8 +132,8 @@
 //   test("evaluating MapOver") {
 //     import TestContext._
 
-//     assertResult( OneOrNone.of(user) := (Option("@eparejatobes")) ){ 
-//       MapOver(Get(name), OneOrNone).evalOn( 
+//     assertResult( OneOrNone.of(user) := (Option("@eparejatobes")) ){
+//       MapOver(Get(name), OneOrNone).evalOn(
 //         OneOrNone.of(user) := (Option(edu.value))
 //       )
 //     }
@@ -143,22 +143,22 @@
 //   test("checking combination of Composition and MapOver") {
 //     import TestContext._
 
-//     assertResult( ManyOrNone.of(user) := Stream("@laughedelic", "@evdokim") ){ 
+//     assertResult( ManyOrNone.of(user) := Stream("@laughedelic", "@evdokim") ){
 //       val q = user.outE(follows)
 //       (q >=> MapOver(follows.tgt.get(name), q.out.container)).evalOn( edu )
 //     }
 
-//     assertResult( ManyOrNone.of(user) := (Stream("@laughedelic", "@evdokim")) ){ 
+//     assertResult( ManyOrNone.of(user) := (Stream("@laughedelic", "@evdokim")) ){
 //       user.outE(follows).map( follows.tgt.get(name) ).evalOn( edu )
 //     }
 
-//     assertResult( ManyOrNone.of(age) := Stream(5, 22) ){ 
+//     assertResult( ManyOrNone.of(age) := Stream(5, 22) ){
 //       twitter.query(user ? (age < 80)).map( Get(age) ).evalOn( titanTwitter )
 //     }
-//     assertResult( ManyOrNone.of(age) := Stream(22) ){ 
+//     assertResult( ManyOrNone.of(age) := Stream(22) ){
 //       twitter.query(user ? (age < 80) and (age > 10)).map( Get(age) ).evalOn( titanTwitter)
 //     }
-//     assertResult( ManyOrNone.of(age) := Stream(5, 22) ){ 
+//     assertResult( ManyOrNone.of(age) := Stream(5, 22) ){
 //       twitter.query(user ? (age between (3, 25))).map( Get(age) ).evalOn( titanTwitter)
 //     }
 
@@ -172,7 +172,7 @@
 //   test("flattening after double map") {
 //     import TestContext._
 
-//     assertResult( (ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim")) ){ 
+//     assertResult( (ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim")) ){
 //       Flatten(
 //         twitter.query(askEdu)
 //           .map( user.outV(follows) )
@@ -181,7 +181,7 @@
 //     }
 
 //     // Same with .flatten syntax:
-//     assertResult( (ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim")) ){ 
+//     assertResult( (ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim")) ){
 //       twitter.query(askEdu)
 //         .map( user.outV(follows) )
 //         .flatten
@@ -190,7 +190,7 @@
 //     }
 
 //     // Same with .flatMap syntax:
-//     assertResult( (ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim")) ){ 
+//     assertResult( (ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim")) ){
 //       twitter.query(askEdu)
 //         .flatMap( user.outV(follows) )
 //         .map( user.get(name) )
@@ -208,7 +208,7 @@
 //     implicitly[ followersNames.Out ≃ ManyOrNone.Of[name.type] ]
 //     assert{ followersNames.out == ManyOrNone.of(name) }
 
-//     assertResult( ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim") ){ 
+//     assertResult( ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim") ){
 //       followersNames.flatten.evalOn( edu )
 //     }
 
@@ -219,11 +219,11 @@
 
 //     assert{ posterName.out == name }
 
-//     assertResult( name := "@eparejatobes" ){ 
+//     assertResult( name := "@eparejatobes" ){
 //       posterName.evalOn( post )
 //     }
 
-//     assertResult( name := "@eparejatobes" ){ 
+//     assertResult( name := "@eparejatobes" ){
 //       posterName.flatten.evalOn( post )
 //     }
 
@@ -261,7 +261,7 @@
 
 //     val result =
 //       (ManyOrNone.of(name) := Stream("@laughedelic", "@evdokim")) ⊗
-//       (ManyOrNone.of(age) := Stream(5, 22)) 
+//       (ManyOrNone.of(age) := Stream(5, 22))
 
 //     // using explicit Par
 //     assertResult(result) {

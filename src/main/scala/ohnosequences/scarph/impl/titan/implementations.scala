@@ -7,7 +7,7 @@ case object implementations {
 
   import ohnosequences.{ scarph => s }
   import s.graphTypes._, s.morphisms._, s.implementations._
-  import titan.{TitanVertex, TitanEdge, TitanElement}
+  import titan.{TitanVertex, TitanEdge, TitanElement, TitanProperty}
   import ohnosequences.scarph.impl.titan.types._
 
 
@@ -40,58 +40,68 @@ case object implementations {
     @inline final def rightProj(t: RawTensor): RawRight = t.right
   }
 
-  case class TitanUnitImpl[E <: AnyGraphElement, TE <: TitanElement](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with UnitImpl[E, Container[TE], TitanGraph]  {
 
-    // TODO a better Unit type here
+  case class TitanUnitVertexImpl[V <: AnyVertex](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with UnitImpl[V, TitanVertices, TitanGraph] {
+
     @inline final def toUnit(o: RawObject): RawUnit = g
 
     final def fromUnit(u: RawUnit, o: Object): RawObject =
-      // FIXME: this has to be specific for edges, vertices, etc.
       g.query.has("label", o.label)
-        .asInstanceOf[JIterable[TE]]
+        .vertices.asTitanVertices
         .asContainer
   }
 
-  case class TitanPropertyVertexImpl[
-    P <: AnyGraphProperty { type Owner <: AnyVertex }
-  ]
-  (val g: TitanGraph)
-  extends
-    AnyVal with
-    AnyTGraph with
-    PropertyImpl[P, Container[TitanVertex], Container[P#Value#Raw]]
-  {
+  case class TitanUnitEdgeImpl[E <: AnyEdge](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with UnitImpl[E, TitanEdges, TitanGraph] {
+
+    @inline final def toUnit(o: RawObject): RawUnit = g
+
+    final def fromUnit(u: RawUnit, o: Object): RawObject =
+      g.query.has("label", o.label)
+        .edges.asTitanEdges
+        .asContainer
+  }
+
+  case class TitanUnitPropertyImpl[P <: AnyValueType](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with UnitImpl[P, TitanProperties, TitanGraph] {
+
+    @inline final def toUnit(o: RawObject): RawUnit = g
+
+    final def fromUnit(u: RawUnit, o: Object): RawObject =
+      g.query.has("label", o.label)
+        .properties
+        .asContainer
+  }
+
+  // TODO: predicates are also objects, and this fromUnit would be an index lookup
+  // case class TitanUnitPredicateImpl[P <: AnyPredicate, TP <: TitanGraphQuery](val g: TitanGraph) { ... }
+
+
+  case class TitanPropertyVertexImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with PropertyImpl[P, TitanVertices, Container[P#Value#Raw]] {
 
     final def get(e: RawElement, p: Property): RawValue =
       e map { _.getProperty[P#Value#Raw](p.label) }
 
     final def lookup(r: RawValue, p: Property): RawElement =
-      r flatMap { v => 
+      r flatMap { v =>
         g.query.has(p.label, v)
-        .vertices
-        .asInstanceOf[JIterable[TitanVertex]]
+        .vertices.asTitanVertices
         .asContainer
       }
   }
 
-  case class TitanPropertyEdgeImpl[
-    P <: AnyGraphProperty { type Owner <: AnyEdge }
-  ]
-  (val g: TitanGraph)
-  extends
-    AnyVal with
-    AnyTGraph with
-    PropertyImpl[P, Container[TitanEdge], Container[P#Value#Raw]] {
+  case class TitanPropertyEdgeImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with PropertyImpl[P, TitanEdges, Container[P#Value#Raw]] {
 
     final def get(e: RawElement, p: Property): RawValue =
       e map { _.getProperty[P#Value#Raw](p.label) }
 
     final def lookup(r: RawValue, p: Property): RawElement =
-      r flatMap { v => 
+      r flatMap { v =>
         g.query.has(p.label, v)
-        .edges
-        .asInstanceOf[JIterable[TitanEdge]]
+        .edges.asTitanEdges
         .asContainer
       }
   }

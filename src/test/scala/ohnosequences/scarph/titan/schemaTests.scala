@@ -1,7 +1,6 @@
 package ohnosequences.scarph.impl.titan.test
 
-import ohnosequences.scarph.schemas._
-import ohnosequences.scarph.graphTypes._
+import ohnosequences.scarph._, schemas._, graphTypes._, monoidalStructures._
 import com.thinkaurelius.titan.{ core => titan }
 import titan.TitanGraph
 import titan.schema.TitanManagement
@@ -29,20 +28,20 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import titanTwitterEvals._
 
   test("eval basic queries over sample twitter graph") {
-    
+
     import ohnosequences.scarph.test._, twitter._
     import ohnosequences.scarph.impl.titan.implementations._
     import ohnosequences.scarph.impl.titan.types._
 
-    val query = lookup(user.name) outV posted inV posted get user.age
+    val query = lookup(user.name) outV posted inV posted get user.name
 
     implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 
-    lazy val z = evaluate(query) on ( 
+    lazy val z = evaluate(query) on (
         name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
       )
-    
-    println( z.value.map { x => x.toString } )    
+
+    println( z.value.map { x => x.toString } )
   }
 
 
@@ -53,8 +52,6 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   var g: TitanGraph = null
 
   override final def beforeAll() {
-
-    g = TitanFactory.open("berkeleyje:" + graphLocation.getAbsolutePath)
 
     def cleanDir(f: File) {
       if (f.isDirectory) f.listFiles.foreach(cleanDir(_))
@@ -69,7 +66,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.titanSchema._
     import ohnosequences.scarph.test._
 
-    twitter createTypesIn g
+    g.createSchema(twitter)
 
     import com.tinkerpop.blueprints.util.io.graphson._
     GraphSONReader.inputGraph(g, this.getClass.getResource("/twitter_graph.json").getPath)
@@ -79,6 +76,10 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
   override final def afterAll() {
     if(g != null) {
+      // NOTE: uncommend if you want to add data to the GraphSON:
+      // import com.tinkerpop.blueprints.util.io.graphson._
+      // GraphSONWriter.outputGraph(g, "graph_compact.json", GraphSONMode.COMPACT)
+
       g.shutdown
       println("Shutdown Titan graph")
     }

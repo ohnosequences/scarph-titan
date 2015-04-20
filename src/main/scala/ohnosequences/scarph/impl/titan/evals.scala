@@ -8,30 +8,44 @@ case object evals {
   import s.graphTypes._, s.morphisms._, s.evals.DefaultEvals
 
   import com.thinkaurelius.titan.{ core => titan }
-  import titan.{TitanVertex, TitanEdge, TitanElement}
+  import titan.{TitanVertex, TitanEdge, TitanElement, TitanProperty}
 
   trait DefaultTitanEvals extends DefaultEvals {
 
     val graph: titan.TitanGraph
 
-    // TODO: should work also for properties and predicates
-    implicit final def unitVertexImpl[V <: AnyVertex]: TitanUnitImpl[V, TitanVertex] = TitanUnitImpl(graph)
 
-    implicit final def unitEdgeImpl[E <: AnyEdge]: TitanUnitImpl[E, TitanEdge] = TitanUnitImpl(graph)
+    implicit final def tensorImpl[L,R]:
+      TitanTensorImpl[L,R] =
+      TitanTensorImpl[L,R]()
 
-    implicit final def vertexPropertyImpl[
-      P0 <: AnyGraphProperty { type Owner <: AnyVertex }
-    ]:
-      TitanPropertyVertexImpl[P0] =
-      TitanPropertyVertexImpl(graph)
+
+    implicit final def unitVertexImpl[V <: AnyVertex]:
+      TitanUnitVertexImpl[V] =
+      TitanUnitVertexImpl[V](graph)
+
+    implicit final def unitEdgeImpl[E <: AnyEdge]:
+      TitanUnitEdgeImpl[E] =
+      TitanUnitEdgeImpl[E](graph)
+
+    implicit final def unitPropertyImpl[P <: AnyValueType]:
+      TitanUnitPropertyImpl[P] =
+      TitanUnitPropertyImpl[P](graph)
+
+
+    implicit final def vertexPropertyImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }]:
+      TitanPropertyVertexImpl[P] =
+      TitanPropertyVertexImpl[P](graph)
 
     implicit final def edgePropertyImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }]:
       TitanPropertyEdgeImpl[P] =
-      TitanPropertyEdgeImpl(graph)
+      TitanPropertyEdgeImpl[P](graph)
+
 
     implicit final def edgeImpl:
       TitanEdgeImpl =
       TitanEdgeImpl(graph)
+
 
     implicit final def vertexOutImpl[E <: AnyEdge]:
       TitanVertexOutImpl[E] =
@@ -41,13 +55,10 @@ case object evals {
       TitanVertexInImpl[E] =
       TitanVertexInImpl[E](graph)
 
+
     implicit final def biproductImpl[L,R]:
       TitanBiproductImpl[L,R] =
-      TitanBiproductImpl()
-
-    implicit final def tensorImpl[L,R]:
-      TitanTensorImpl[L,R] =
-      TitanTensorImpl()
+      TitanBiproductImpl[L,R]()
 
 
     implicit final def zeroImpl[V]:

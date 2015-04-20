@@ -28,55 +28,45 @@ object titanSchema {
   }
 
   // TODO this should be improved
-  implicit def titanGraphSchemaOps(g: TitanGraph): TitanGraphSchemaOps = TitanGraphSchemaOps(g)
-  final case class TitanGraphSchemaOps(val g: TitanGraph) extends AnyVal {
+  // TODO return errors
+  implicit def titanGraphSchemaOps(graph: TitanGraph): TitanGraphSchemaOps = TitanGraphSchemaOps(graph)
 
-    // TODO return errors
-    final def titanPropertyTypeFor(v: AnyValueType): Unit = {
+  final case class TitanGraphSchemaOps(val graph: TitanGraph) extends AnyVal {
 
-      println(s"Creating property type for ${v.label}, with value type ${v.rawTag}")
-      val mgmt = g.getManagementSystem
+    final def addPropertyKey(v: AnyValueType): titan.PropertyKey = {
+      println(s"  Creating [${v.label}] property key (${v.rawTag})")
 
-      mgmt.makePropertyKey(v.label)
+      graph.makePropertyKey(v.label)
         .dataType(v.rawTag.runtimeClass)
         .make()
-
-      mgmt.commit
     }
 
-    final def titanEdgeTypeFor(e: AnyEdge): Unit = {
+    final def addEdgeLabel(e: AnyEdge): titan.EdgeLabel = {
+      println(s"  Creating [${e.label}] edge label")
 
-      println(s"Creating edge type for ${e}")
-      val mgmt = g.getManagementSystem
-
-      mgmt.makeEdgeLabel(e.label)
+      graph.makeEdgeLabel(e.label)
         .multiplicity(edgeTitanMultiplicity(e))
         .make()
-
-      mgmt.commit
     }
 
-    final def titanVertexTypeFor(v: AnyVertex): Unit = {
+    final def addVertexLabel(v: AnyVertex): titan.VertexLabel = {
+      println(s"  Creating [${v.label}] vertex label")
 
-      println(s"Creating vertex type for ${v}")
-      val mgmt = g.getManagementSystem
-
-      mgmt.makeVertexLabel(v.label)
+      graph.makeVertexLabel(v.label)
         .make()
-
-      mgmt.commit
     }
-  }
 
-  implicit final def scarphSchemaTitanOps(schema: AnyGraphSchema): ScarphSchemaTitanOps = ScarphSchemaTitanOps(schema)
-  case class ScarphSchemaTitanOps(val schema: AnyGraphSchema) extends AnyVal {
+    // TODO: could return something more useful, for example pairs (scarph type, titan key)
+    final def createSchema(schema: AnyGraphSchema): Unit = {
 
-    // TODO errors
-    final def createTypesIn(g: TitanGraph)(implicit ops: TitanGraph => TitanGraphSchemaOps): Unit = {
+      println(s"Creating schema types for ${schema.label}")
 
-      schema.vertices   map g.titanVertexTypeFor
-      schema.edges      map g.titanEdgeTypeFor
-      schema.valueTypes map g.titanPropertyTypeFor
+      val propertyKeys = schema.valueTypes map graph.addPropertyKey
+      val edgeLabels   = schema.edges      map graph.addEdgeLabel
+      val vertexLabels = schema.vertices   map graph.addVertexLabel
+
+      // NOTE: not sure that it's needed
+      // graph.commit
     }
   }
 }

@@ -10,7 +10,6 @@ case object types {
   final type JIterable[T]    = java.lang.Iterable[T]
   final type TitanVertices   = Container[titan.TitanVertex]
   final type TitanEdges      = Container[titan.TitanEdge]
-  final type TitanProperties = Container[titan.TitanProperty]
   final type TitanGraph      = titan.TitanGraph
 
   final def zero[T]: Container[T] = Seq()

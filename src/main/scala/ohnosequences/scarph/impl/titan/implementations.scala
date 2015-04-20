@@ -56,14 +56,14 @@ case object implementations {
         .edges.asTitanEdges
   }
 
-  case class TitanUnitPropertyImpl[P <: AnyValueType](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with UnitImpl[P, TitanProperties, TitanGraph] {
+  case class TitanUnitValueTypeImpl[V <: AnyValueType](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with UnitImpl[V, Container[V#Raw], TitanGraph] {
 
     @inline final def toUnit(o: RawObject): RawUnit = g
 
     final def fromUnit(u: RawUnit, o: Object): RawObject =
       g.query.has("label", o.label)
-        .properties.asContainer
+        .properties.asContainer.map{ _.getValue }
   }
 
   // TODO: predicates are also objects, and this fromUnit would be an index lookup

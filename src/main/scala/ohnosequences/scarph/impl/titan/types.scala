@@ -2,6 +2,7 @@ package ohnosequences.scarph.impl.titan
 
 case object types {
 
+  import com.tinkerpop.blueprints
   import com.thinkaurelius.titan.{ core => titan }
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
 
@@ -25,23 +26,25 @@ case object types {
     @inline final def asContainer: Container[T] = ts.asScala
   }
 
-  implicit final def blueprintsVerticesOps(es: JIterable[com.tinkerpop.blueprints.Vertex]):
+  implicit final def blueprintsVerticesOps(es: JIterable[blueprints.Vertex]):
     BlueprintsVerticesOps =
     BlueprintsVerticesOps(es)
-  case class BlueprintsVerticesOps(val es: JIterable[com.tinkerpop.blueprints.Vertex]) extends AnyVal {
+  case class BlueprintsVerticesOps(val es: JIterable[blueprints.Vertex]) extends AnyVal {
 
-    @inline final def asTitanVertices: JIterable[titan.TitanVertex] = es.asInstanceOf[JIterable[titan.TitanVertex]]
+    @inline final def asTitanVertices: TitanVertices =
+      es.asInstanceOf[JIterable[titan.TitanVertex]].asContainer
   }
 
-  implicit final def blueprintsEdgesOps(es: JIterable[com.tinkerpop.blueprints.Edge]):
+  implicit final def blueprintsEdgesOps(es: JIterable[blueprints.Edge]):
     BlueprintsEdgesOps =
     BlueprintsEdgesOps(es)
-  case class BlueprintsEdgesOps(val es: JIterable[com.tinkerpop.blueprints.Edge]) extends AnyVal {
+  case class BlueprintsEdgesOps(val es: JIterable[blueprints.Edge]) extends AnyVal {
 
-    @inline final def asTitanEdges: JIterable[titan.TitanEdge] = es.asInstanceOf[JIterable[titan.TitanEdge]]
+    @inline final def asTitanEdges: TitanEdges =
+      es.asInstanceOf[JIterable[titan.TitanEdge]].asContainer
   }
 
-  case class TitanBiproduct[L,R](val both: (Container[L], Container[R])) extends AnyVal {
+  case class TitanBiproduct[L, R](val both: (Container[L], Container[R])) extends AnyVal {
 
     type Left = L
     type Right = R
@@ -49,8 +52,12 @@ case object types {
     @inline final def left  = both._1
     @inline final def right = both._2
 
-    final def map[X,Y](f: L => X, g: R => Y): TitanBiproduct[X,Y] = TitanBiproduct( (left map f, right map g) )
+    final def map[X, Y](f: L => X, g: R => Y): TitanBiproduct[X, Y] = TitanBiproduct( (left map f, right map g) )
   }
 
-  case class TitanTensor[L,R](val left: Container[L], val right: Container[R])
+  case class TitanTensor[L, R](val left: Container[L], val right: Container[R]) {
+
+    type Left = L
+    type Right = R
+  }
 }

@@ -15,9 +15,9 @@ case object evals {
     val graph: titan.TitanGraph
 
 
-    implicit final def tensorImpl[L,R]:
-      TitanTensorImpl[L,R] =
-      TitanTensorImpl[L,R]()
+    implicit final def tensorImpl[L, R]:
+      TitanTensorImpl[L, R] =
+      TitanTensorImpl[L, R]()
 
 
     implicit final def unitVertexImpl[V <: AnyVertex]:
@@ -56,13 +56,13 @@ case object evals {
       TitanVertexInImpl[E](graph)
 
 
-    implicit final def biproductImpl[L,R]:
-      TitanBiproductImpl[L,R] =
-      TitanBiproductImpl[L,R]()
+    implicit final def biproductImpl[L, R]:
+      TitanBiproductImpl[L, R] =
+      TitanBiproductImpl[L, R]()
 
 
     implicit final def zeroImpl[V]:
       TitanZeroImpl[V] =
-      TitanZeroImpl[V](graph)
+      TitanZeroImpl[V]()
   }
 }

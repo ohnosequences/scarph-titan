@@ -16,9 +16,9 @@ case object implementations {
     def g: TitanGraph
   }
 
-  case class TitanBiproductImpl[L,R]() extends BiproductImpl[TitanBiproduct[L,R], Container[L],Container[R]] {
+  case class TitanBiproductImpl[L, R]() extends BiproductImpl[TitanBiproduct[L, R], Container[L],Container[R]] {
 
-    @inline final def apply(l: RawLeft, r: RawRight): RawBiproduct = TitanBiproduct( (l,r) )
+    @inline final def apply(l: RawLeft, r: RawRight): RawBiproduct = TitanBiproduct( (l, r) )
 
     @inline final def leftProj(b: RawBiproduct): RawLeft = b.left
     @inline final def leftInj(l: RawLeft): RawBiproduct = TitanBiproduct( (l, Seq()) )
@@ -27,16 +27,11 @@ case object implementations {
     @inline final def rightInj(r: RawRight): RawBiproduct = TitanBiproduct( (Seq(), r) )
   }
 
-  case class TitanTensorImpl[L,R]() extends AnyTensorImpl {
+  case class TitanTensorImpl[L, R]() extends TensorImpl[TitanTensor[L, R], Container[L], Container[R]] {
 
-    type RawTensor = TitanTensor[L,R]
+    @inline final def apply(l: RawLeft, r: RawRight): RawTensor = TitanTensor[L, R](l, r)
 
-    @inline final def apply(l: RawLeft, r: RawRight): RawTensor = TitanTensor(l,r)
-
-    type RawLeft = Container[L]
     @inline final def leftProj(t: RawTensor): RawLeft = t.left
-
-    type RawRight = Container[R]
     @inline final def rightProj(t: RawTensor): RawRight = t.right
   }
 
@@ -49,7 +44,6 @@ case object implementations {
     final def fromUnit(u: RawUnit, o: Object): RawObject =
       g.query.has("label", o.label)
         .vertices.asTitanVertices
-        .asContainer
   }
 
   case class TitanUnitEdgeImpl[E <: AnyEdge](val g: TitanGraph)
@@ -60,7 +54,6 @@ case object implementations {
     final def fromUnit(u: RawUnit, o: Object): RawObject =
       g.query.has("label", o.label)
         .edges.asTitanEdges
-        .asContainer
   }
 
   case class TitanUnitPropertyImpl[P <: AnyValueType](val g: TitanGraph)
@@ -70,8 +63,7 @@ case object implementations {
 
     final def fromUnit(u: RawUnit, o: Object): RawObject =
       g.query.has("label", o.label)
-        .properties
-        .asContainer
+        .properties.asContainer
   }
 
   // TODO: predicates are also objects, and this fromUnit would be an index lookup
@@ -88,7 +80,6 @@ case object implementations {
       r flatMap { v =>
         g.query.has(p.label, v)
         .vertices.asTitanVertices
-        .asContainer
       }
   }
 
@@ -102,22 +93,20 @@ case object implementations {
       r flatMap { v =>
         g.query.has(p.label, v)
         .edges.asTitanEdges
-        .asContainer
       }
   }
 
   case class TitanEdgeImpl(val g: TitanGraph)
     extends AnyVal with AnyTGraph with EdgeImpl[TitanEdges, TitanVertices, TitanVertices] {
 
-    final def source(e: RawEdge): RawSource = e map { _.getVertex(Direction.OUT)  }
+    final def source(e: RawEdge): RawSource = e map { _.getVertex(Direction.OUT) }
 
-    final def target(e: RawEdge): RawTarget = e map { _.getVertex(Direction.IN)   }
+    final def target(e: RawEdge): RawTarget = e map { _.getVertex(Direction.IN) }
   }
 
-  case class TitanZeroImpl[T](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with ZeroImpl[Container[T]] {
+  case class TitanZeroImpl[T]() extends ZeroImpl[Container[T]] {
 
-    @inline final def apply(): Raw = zero
+    @inline final def apply(): Raw = zero[T]
   }
 
   case class TitanVertexOutImpl[E <: AnyEdge](val g: TitanGraph)
@@ -128,8 +117,7 @@ case object implementations {
         _.query
           .labels(e.label)
           .direction(Direction.OUT)
-          .titanEdges
-          .asContainer
+          .titanEdges.asContainer
       }
 
     final def outV(v: RawVertex, e: Edge): RawOutVertex =
@@ -137,8 +125,7 @@ case object implementations {
         _.query
           .labels(e.label)
           .direction(Direction.OUT)
-          .vertexIds
-          .asContainer
+          .vertexIds.asContainer
       }
   }
 
@@ -150,8 +137,7 @@ case object implementations {
         _.query
           .labels(e.label)
           .direction(Direction.IN)
-          .titanEdges
-          .asContainer
+          .titanEdges.asContainer
       }
 
     final def inV(v: RawVertex, e: Edge): RawInVertex =
@@ -159,8 +145,7 @@ case object implementations {
         _.query
           .labels(e.label)
           .direction(Direction.IN)
-          .vertexIds
-          .asContainer
+          .vertexIds.asContainer
       }
   }
 }

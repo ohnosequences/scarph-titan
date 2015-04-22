@@ -3,10 +3,11 @@ package ohnosequences.scarph.impl.titan
 case object implementations {
 
   import com.thinkaurelius.titan.{ core => titan }
+  import com.tinkerpop.blueprints
   import com.tinkerpop.blueprints.Direction
 
   import ohnosequences.{ scarph => s }
-  import s.graphTypes._, s.morphisms._, s.implementations._
+  import s.graphTypes._, s.morphisms._, s.implementations._, s.predicates._
   import titan.{TitanVertex, TitanEdge, TitanElement, TitanProperty}
   import ohnosequences.scarph.impl.titan.types._
 
@@ -148,4 +149,13 @@ case object implementations {
           .vertexIds.asContainer
       }
   }
+
+  case class TitanVertexPredicateImpl[P <: AnyPredicate](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with PredicateImpl[P, blueprints.Query, TitanVertices] {
+
+    def quantify(e: RawElement, p: Predicate): RawPredicate = ???
+
+    def coerce(p: RawPredicate): RawElement = ???
+  }
+
 }

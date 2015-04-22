@@ -3,8 +3,7 @@ package ohnosequences.scarph.impl.titan
 object predicates {
 
   import com.tinkerpop.blueprints.Compare._
-  import com.tinkerpop.blueprints.{ Query => BQuery }
-  // import com.thinkaurelius.titan.core.{ TitanVertexQuery => BQuery }
+  import com.tinkerpop.blueprints
 
   import ohnosequences.cosas._, fns._
   import ohnosequences.cosas.ops.typeSets._
@@ -13,7 +12,7 @@ object predicates {
   import s.graphTypes._, s.conditions._, s.predicates._
 
 
-  trait ToBlueprintsQuery[P <: AnyPredicate] extends Fn2[P, BQuery] with Out[BQuery]
+  trait ToBlueprintsQuery[P <: AnyPredicate] extends Fn2[P, blueprints.Query] with Out[blueprints.Query]
 
   object ToBlueprintsQuery {
 

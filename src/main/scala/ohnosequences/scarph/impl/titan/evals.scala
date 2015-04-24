@@ -5,7 +5,7 @@ case object evals {
   import implementations._
 
   import ohnosequences.{ scarph => s }
-  import s.graphTypes._, s.morphisms._, s.evals.DefaultEvals
+  import s.objects._, s.morphisms._, s.evals.DefaultEvals
 
   import com.thinkaurelius.titan.{ core => titan }
   import titan.{TitanVertex, TitanEdge, TitanElement, TitanProperty}
@@ -33,11 +33,11 @@ case object evals {
       TitanUnitValueTypeImpl[P](graph)
 
 
-    implicit final def vertexPropertyImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }]:
+    implicit final def vertexPropertyImpl[P <: AnyProperty { type Owner <: AnyVertex }]:
       TitanPropertyVertexImpl[P] =
       TitanPropertyVertexImpl[P](graph)
 
-    implicit final def edgePropertyImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }]:
+    implicit final def edgePropertyImpl[P <: AnyProperty { type Owner <: AnyEdge }]:
       TitanPropertyEdgeImpl[P] =
       TitanPropertyEdgeImpl[P](graph)
 

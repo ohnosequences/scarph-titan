@@ -9,7 +9,7 @@ object predicates {
   import ohnosequences.cosas.ops.typeSets._
 
   import ohnosequences.{ scarph => s}
-  import s.graphTypes._, s.conditions._, s.predicates._
+  import s.objects._
 
 
   trait ToBlueprintsQuery[P <: AnyPredicate] extends Fn2[P, blueprints.Query] with Out[blueprints.Query]

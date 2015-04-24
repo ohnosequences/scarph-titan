@@ -1,6 +1,6 @@
 package ohnosequences.scarph.impl.titan.test
 
-import ohnosequences.scarph._, schemas._, graphTypes._, monoidalStructures._
+import ohnosequences.scarph._, schemas._, objects._, monoidalStructures._
 import com.thinkaurelius.titan.{ core => titan }
 import titan.TitanGraph
 import titan.schema.TitanManagement

@@ -7,7 +7,7 @@ case object implementations {
   import com.tinkerpop.blueprints.Direction
 
   import ohnosequences.{ scarph => s }
-  import s.graphTypes._, s.morphisms._, s.implementations._, s.predicates._
+  import s.objects._, s.morphisms._, s.implementations._
   import titan.{TitanVertex, TitanEdge, TitanElement, TitanProperty}
   import ohnosequences.scarph.impl.titan.types._
 
@@ -71,7 +71,7 @@ case object implementations {
   // case class TitanUnitPredicateImpl[P <: AnyPredicate, TP <: TitanGraphQuery](val g: TitanGraph) { ... }
 
 
-  case class TitanPropertyVertexImpl[P <: AnyGraphProperty { type Owner <: AnyVertex }](val g: TitanGraph)
+  case class TitanPropertyVertexImpl[P <: AnyProperty { type Owner <: AnyVertex }](val g: TitanGraph)
     extends AnyVal with AnyTGraph with PropertyImpl[P, TitanVertices, Container[P#Value#Raw]] {
 
     final def get(e: RawElement, p: Property): RawValue =
@@ -84,7 +84,7 @@ case object implementations {
       }
   }
 
-  case class TitanPropertyEdgeImpl[P <: AnyGraphProperty { type Owner <: AnyEdge }](val g: TitanGraph)
+  case class TitanPropertyEdgeImpl[P <: AnyProperty { type Owner <: AnyEdge }](val g: TitanGraph)
     extends AnyVal with AnyTGraph with PropertyImpl[P, TitanEdges, Container[P#Value#Raw]] {
 
     final def get(e: RawElement, p: Property): RawValue =
@@ -107,7 +107,7 @@ case object implementations {
 
   case class TitanZeroImpl[T]() extends ZeroImpl[Container[T]] {
 
-    @inline final def apply(): Raw = zero[T]
+    @inline final def apply(): Raw = titanZero[T]
   }
 
   case class TitanVertexOutImpl[E <: AnyEdge](val g: TitanGraph)

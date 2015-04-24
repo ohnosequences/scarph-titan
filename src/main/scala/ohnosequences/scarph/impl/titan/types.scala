@@ -12,7 +12,7 @@ case object types {
   final type TitanEdges      = Container[titan.TitanEdge]
   final type TitanGraph      = titan.TitanGraph
 
-  final def zero[T]: Container[T] = Seq()
+  final def titanZero[T]: Container[T] = Seq()
 
   implicit final def containerOps[T](cs: Container[T]): ContainerOps[T] = ContainerOps[T](cs)
   case class ContainerOps[T](val cs: Container[T]) extends AnyVal {

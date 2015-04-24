@@ -7,8 +7,8 @@
 // import ohnosequences.cosas._, types._
 
 // import ohnosequences.{ scarph => s }
-// import s.graphTypes._, s.steps._, s.containers._, s.combinators._, s.indexes._, s.syntax
-// import s.syntax._, conditions._, predicates._, paths._, graphTypes._
+// import s.objects._, s.steps._, s.containers._, s.combinators._, s.indexes._, s.syntax
+// import s.syntax._, conditions._, predicates._, paths._, objects._
 // import s.impl, impl.titan.schema._, impl.titan.predicates._, impl.titan.evals._
 // import s.test.Twitter._
 

@@ -130,6 +130,24 @@ case object implementations {
       }
   }
 
+  case class TitanVertexOutImpl_2[E <: AnyEdge](val g: TitanGraph)
+    extends AnyVal with AnyTGraph with VertexOutImpl[E, TitanVertices, TitanQueries, TitanQueries] {
+
+    final def outE(v: RawVertex, e: Edge): RawOutEdge =
+      v map {
+        _.query
+          .labels(e.label)
+          .direction(Direction.OUT)
+      }
+
+    final def outV(v: RawVertex, e: Edge): RawOutVertex =
+      v map {
+        _.query
+          .labels(e.label)
+          .direction(Direction.OUT)
+      }
+  }
+
   case class TitanVertexInImpl[E <: AnyEdge](val g: TitanGraph)
     extends AnyVal with AnyTGraph with VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] {
 
@@ -150,12 +168,12 @@ case object implementations {
       }
   }
 
-  case class TitanVertexPredicateImpl[P <: AnyPredicate](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with PredicateImpl[P, blueprints.Query, TitanVertices] {
-
-    def quantify(e: RawElement, p: Predicate): RawPredicate = ???
-
-    def coerce(p: RawPredicate): RawElement = ???
-  }
+//  case class TitanVertexPredicateImpl[P <: AnyPredicate](val g: TitanGraph)
+//    extends AnyVal with AnyTGraph with PredicateImpl[P, blueprints.Query, TitanVertices] {
+//
+//    def quantify(e: RawElement, p: Predicate): RawPredicate = ???
+//
+//    def coerce(p: RawPredicate): RawElement = ???
+//  }
 
 }

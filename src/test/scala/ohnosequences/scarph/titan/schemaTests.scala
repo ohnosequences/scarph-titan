@@ -1,11 +1,9 @@
 package ohnosequences.scarph.impl.titan.test
 
-import ohnosequences.scarph._, schemas._, objects._, monoidalStructures._
+import ohnosequences.scarph._, objects._
 import com.thinkaurelius.titan.{ core => titan }
-import titan.TitanGraph
-import titan.schema.TitanManagement
+//import scala.reflect.runtime.universe._*/
 
-import scala.reflect.runtime.universe._
 
 object schemaTests {
 
@@ -21,7 +19,8 @@ object schemaTests {
 
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
-  import ohnosequences.scarph._, evals._, morphisms._, syntax.morphisms._
+  import ohnosequences.scarph._, evals._, morphisms._
+  import syntax.objects._, syntax.morphisms._
   import ohnosequences.scarph.impl.titan.evals._
 
   object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
@@ -33,7 +32,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.implementations._
     import ohnosequences.scarph.impl.titan.types._
 
-    val query = lookup(user.name) outV posted inV posted get user.name
+    val query = lookup(user.name) outV posted quantify(tweet ? (tweet.text === "foo")) //inV posted get user.name
 
     implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 

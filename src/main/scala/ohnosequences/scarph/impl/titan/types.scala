@@ -10,6 +10,7 @@ case object types {
   final type JIterable[T]    = java.lang.Iterable[T]
   final type TitanVertices   = Container[titan.TitanVertex]
   final type TitanEdges      = Container[titan.TitanEdge]
+  final type TitanQueries    = Container[blueprints.Query]
   final type TitanGraph      = titan.TitanGraph
 
   final def titanZero[T]: Container[T] = Seq()

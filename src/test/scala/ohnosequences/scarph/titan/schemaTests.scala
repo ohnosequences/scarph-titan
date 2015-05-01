@@ -32,15 +32,26 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.implementations._
     import ohnosequences.scarph.impl.titan.types._
 
-    val query = lookup(user.name) outV posted quantify(tweet ? (tweet.text === "foo")) //inV posted get user.name
+    val query = lookup(user.name)
+      .outV(posted)
+      .quantify(tweet ? (tweet.url =/= "foo"))
+      //.inV(posted)
+      //.filter(user ? (user.name =/= "@laughedelic"))
+      //.get(user.name)
 
     implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 
-    lazy val z = evaluate(query) on (
-        name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
-      )
+    println("\n----------------")
+    println("rewritten query:")
+    println(evaluate(rewrite(query)).evalPlan)
 
-    println( z.value.map { x => x.toString } )
+    lazy val z = evaluate(query) on (
+      name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
+    )
+
+    println("\n----------------")
+    println("results:")
+    z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForProperties.toString) }
   }
 
 

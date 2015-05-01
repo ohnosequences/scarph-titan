@@ -15,52 +15,38 @@ case object evals {
 
   trait TitanRewriteRules extends SpecificTitanEvals {
 
-    implicit def rewrite_quantify[
-      F <: AnyGraphMorphism,
-      G <: AnyGraphMorphism { type In = F#Out; type Out = P#Element },
-      P <: AnyPredicate
-    ]:  Rewrite[(F >=> G) >=> quantify[P], F >=> (G >=> quantify[P])] =
-    new Rewrite[(F >=> G) >=> quantify[P], F >=> (G >=> quantify[P])] {
-
-      def apply(morph: InMorph): OutMorph = {
-        val f = morph.first.first
-        val g = morph.first.second
-        val h = morph.second
-        f >=> (g >=> h)
-      }
-    }
+//    implicit def rewrite_quantify[
+//      F <: AnyGraphMorphism,
+//      G <: AnyGraphMorphism { type In = F#Out; type Out = P#Element },
+//      P <: AnyPredicate
+//    ]:  Rewrite[(F >=> G) >=> quantify[P], F >=> (G >=> quantify[P])] =
+//    new Rewrite[(F >=> G) >=> quantify[P], F >=> (G >=> quantify[P])] {
+//
+//      def apply(morph: InMorph): OutMorph = {
+//        val f = morph.first.first
+//        val g = morph.first.second
+//        val h = morph.second
+//        f >=> (g >=> h)
+//      }
+//    }
   }
 
   trait SpecificTitanEvals extends DerivedTitanEvals {
 
-    implicit final def eval_quantify[
-      P <: AnyPredicate
-    ](implicit
-      addConditions: ToBlueprintsQuery[P]
-    ):  Eval[TitanQueries, quantify[P], TitanQueries] =
-    new Eval[TitanQueries, quantify[P], TitanQueries] {
+    implicit final def eval_quantify_[I, M <: AnyGraphMorphism { type Out = P#Element }, P <: AnyPredicate](
+      implicit eval_previous: Eval[I, M, TitanQueries]
+    ):  Eval[I, M >=> quantify[P], TitanQueries] =
+    new Eval[I, M >=> quantify[P], TitanQueries] {
 
       def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := input.value.map{ addConditions(morph.predicate, _) }
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def eval_coerce_Edges[
-      E <: AnyEdge, P <: AnyPredicate.On[E]
-    ]:  Eval[TitanQueries, coerce[P], TitanEdges] =
-    new Eval[TitanQueries, coerce[P], TitanEdges] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := input.value.flatMap{ _.edges.asTitanEdges }
+        (morph.out: InMorph#Out) := eval_previous(morph.first)(input).value.map{ addConditions(morph.second.predicate, _) }
       }
 
       def present(morph: InMorph): String = morph.label
     }
 
     implicit final def eval_coerce_Vertices[
-      E <: AnyVertex, P <: AnyPredicate.On[E]
+      P <: AnyPredicate { type Element <: AnyVertex }
     ]:  Eval[TitanQueries, coerce[P], TitanVertices] =
     new Eval[TitanQueries, coerce[P], TitanVertices] {
 
@@ -70,13 +56,9 @@ case object evals {
 
       def present(morph: InMorph): String = morph.label
     }
-
   }
 
-  trait DerivedTitanEvals extends DefaultEvals {
-
-    val graph: titan.TitanGraph
-
+  trait DerivedTitanEvals extends DerivedTitanEvals_2 {
 
     implicit final def tensorImpl[L, R]:
       TitanTensorImpl[L, R] =
@@ -128,4 +110,20 @@ case object evals {
       TitanZeroImpl[V] =
       TitanZeroImpl[V]()
   }
+
+
+  trait DerivedTitanEvals_2 extends DefaultEvals {
+
+    val graph: titan.TitanGraph
+
+
+    implicit final def vertexOutImpl_Query[E <: AnyEdge]:
+      TitanVertexOutImpl_Query[E] =
+      TitanVertexOutImpl_Query[E](graph)
+
+    implicit final def vertexInImpl_Query[E <: AnyEdge]:
+      TitanVertexInImpl_Query[E] =
+      TitanVertexInImpl_Query[E](graph)
+  }
+
 }

@@ -130,23 +130,6 @@ case object implementations {
       }
   }
 
-  case class TitanVertexOutImpl_Query[E <: AnyEdge](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with VertexOutImpl[E, TitanVertices, TitanQueries, TitanQueries] {
-
-    final def outE(v: RawVertex, e: Edge): RawOutEdge =
-      v map {
-        _.query
-          .labels(e.label)
-          .direction(Direction.OUT)
-      }
-
-    final def outV(v: RawVertex, e: Edge): RawOutVertex = outE(v, e)
-      // v map {
-      //   _.query
-      //     .labels(e.label)
-      //     .direction(Direction.OUT)
-      // }
-  }
 
   case class TitanVertexInImpl[E <: AnyEdge](val g: TitanGraph)
     extends AnyVal with AnyTGraph with VertexInImpl[E, TitanVertices, TitanEdges, TitanVertices] {
@@ -166,19 +149,6 @@ case object implementations {
           .direction(Direction.IN)
           .vertexIds.asContainer
       }
-  }
-
-  case class TitanVertexInImpl_Query[E <: AnyEdge](val g: TitanGraph)
-    extends AnyVal with AnyTGraph with VertexInImpl[E, TitanVertices, TitanQueries, TitanQueries] {
-
-    final def inE(v: RawVertex, e: Edge): RawInEdge =
-      v map {
-        _.query
-          .labels(e.label)
-          .direction(Direction.IN)
-      }
-
-    final def inV(v: RawVertex, e: Edge): RawInVertex = inE(v, e)
   }
 
 }

@@ -9,27 +9,12 @@ case object evals {
 
   import com.thinkaurelius.titan.{ core => titan }
   import com.tinkerpop.blueprints
+  import com.tinkerpop.blueprints.Direction
 
 
   trait DefaultTitanEvals extends TitanRewriteRules {}
 
-  trait TitanRewriteRules extends SpecificTitanEvals {
-
-//    implicit def rewrite_quantify[
-//      F <: AnyGraphMorphism,
-//      G <: AnyGraphMorphism { type In = F#Out; type Out = P#Element },
-//      P <: AnyPredicate
-//    ]:  Rewrite[(F >=> G) >=> quantify[P], F >=> (G >=> quantify[P])] =
-//    new Rewrite[(F >=> G) >=> quantify[P], F >=> (G >=> quantify[P])] {
-//
-//      def apply(morph: InMorph): OutMorph = {
-//        val f = morph.first.first
-//        val g = morph.first.second
-//        val h = morph.second
-//        f >=> (g >=> h)
-//      }
-//    }
-  }
+  trait TitanRewriteRules extends SpecificTitanEvals {}
 
   trait SpecificTitanEvals extends DerivedTitanEvals {
 
@@ -45,20 +30,20 @@ case object evals {
       def present(morph: InMorph): String = morph.label
     }
 
-    implicit final def eval_coerce_Vertices[
-      P <: AnyPredicate { type Element <: AnyVertex }
-    ]:  Eval[TitanQueries, coerce[P], TitanVertices] =
-    new Eval[TitanQueries, coerce[P], TitanVertices] {
+    implicit final def eval_coerce_Edges[
+      P <: AnyPredicate { type Element <: AnyEdge }
+    ]:  Eval[TitanQueries, coerce[P], TitanEdges] =
+    new Eval[TitanQueries, coerce[P], TitanEdges] {
 
       def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := input.value.flatMap{ _.vertices.asTitanVertices }
+        (morph.out: InMorph#Out) := input.value.flatMap{ _.edges.asTitanEdges }
       }
 
       def present(morph: InMorph): String = morph.label
     }
   }
 
-  trait DerivedTitanEvals extends DerivedTitanEvals_2 {
+  trait DerivedTitanEvals extends LowPriorityEvals {
 
     implicit final def tensorImpl[L, R]:
       TitanTensorImpl[L, R] =
@@ -112,18 +97,44 @@ case object evals {
   }
 
 
-  trait DerivedTitanEvals_2 extends DefaultEvals {
+  trait LowPriorityEvals extends DefaultEvals {
 
     val graph: titan.TitanGraph
 
 
-    implicit final def vertexOutImpl_Query[E <: AnyEdge]:
-      TitanVertexOutImpl_Query[E] =
-      TitanVertexOutImpl_Query[E](graph)
+    implicit final def eval_inE[
+      E <: AnyEdge
+    ]:  Eval[TitanVertices, inE[E], TitanQueries] =
+    new Eval[TitanVertices, inE[E], TitanQueries] {
 
-    implicit final def vertexInImpl_Query[E <: AnyEdge]:
-      TitanVertexInImpl_Query[E] =
-      TitanVertexInImpl_Query[E](graph)
+      def apply(morph: InMorph): OutMorph = { input: Input =>
+        morph.out := (input.value map {
+          _.query
+            .labels(morph.edge.label)
+            .direction(Direction.IN)
+        })
+      }
+
+      def present(morph: InMorph): String = morph.label
+    }
+
+
+    implicit final def eval_outE[
+      E <: AnyEdge
+    ]:  Eval[TitanVertices, outE[E], TitanQueries] =
+    new Eval[TitanVertices, outE[E], TitanQueries] {
+
+      def apply(morph: InMorph): OutMorph = { input: Input =>
+        morph.out := (input.value map {
+          _.query
+            .labels(morph.edge.label)
+            .direction(Direction.OUT)
+        })
+      }
+
+      def present(morph: InMorph): String = morph.label
+    }
+
   }
 
 }

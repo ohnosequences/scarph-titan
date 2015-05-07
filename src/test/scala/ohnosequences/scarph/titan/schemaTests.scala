@@ -34,10 +34,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     val query = lookup(user.name)
       .outV(posted)
-      .quantify(tweet ? (tweet.url =/= "foo"))
-      //.inV(posted)
-      //.filter(user ? (user.name =/= "@laughedelic"))
-      //.get(user.name)
+      //.quantify(tweet ? (tweet.url =/= "foo"))
+      //.coerce
+      //.get(tweet.text)
+      .inE(posted)
+      .quantify(posted ? (posted.time =/= ""))
+      .coerce
+      .get(posted.time)
 
     implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 
@@ -50,8 +53,15 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     )
 
     println("\n----------------")
+    println("predicates:")
+    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForEdges.toString) }*/
+    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForProperties.toString) }*/
+
+    println("\n----------------")
     println("results:")
-    z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForProperties.toString) }
+    z.value.foreach(println)
+
+    println("\n----------------")
   }
 
 

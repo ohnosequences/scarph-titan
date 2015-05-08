@@ -33,17 +33,21 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.types._
 
     val query = lookup(user.name)
-      .outV(posted)
+      //.outV(posted)
       //.quantify(tweet ? (tweet.url =/= "foo"))
       //.coerce
       //.get(tweet.text)
-      .inV(posted)
-      .filter(user ? (user.name =/= "@evdokim") and (user.age > 20))
-      .get(user.name)
+      //.inV(posted)
+      //.filter(user ? (user.name =/= "@evdokim") and (user.age > 20))
+      //.get(user.name)
       //.inE(posted)
       //.quantify(posted ? (posted.time =/= ""))
       //.coerce
       //.get(posted.time)
+      .outV(follows)
+      .fork
+      .merge
+      .get(user.name)
 
     implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 

@@ -90,6 +90,10 @@ case object evals {
       TitanBiproductImpl[L, R] =
       TitanBiproductImpl[L, R]()
 
+    implicit final def mergeImpl[E <: titan.TitanElement]:
+      TitanMergeImpl[E] =
+      TitanMergeImpl[E]()
+
 
     implicit final def zeroImpl[V]:
       TitanZeroImpl[V] =

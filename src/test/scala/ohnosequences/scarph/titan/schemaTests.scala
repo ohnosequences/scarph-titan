@@ -37,10 +37,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       //.quantify(tweet ? (tweet.url =/= "foo"))
       //.coerce
       //.get(tweet.text)
-      .inE(posted)
-      .quantify(posted ? (posted.time =/= ""))
-      .coerce
-      .get(posted.time)
+      .inV(posted)
+      .filter(user ? (user.name =/= "@evdokim") and (user.age > 20))
+      .get(user.name)
+      //.inE(posted)
+      //.quantify(posted ? (posted.time =/= ""))
+      //.coerce
+      //.get(posted.time)
 
     implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 

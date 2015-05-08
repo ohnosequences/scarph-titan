@@ -11,6 +11,8 @@ case object implementations {
   import titan.{TitanVertex, TitanEdge, TitanElement, TitanProperty}
   import ohnosequences.scarph.impl.titan.types._
 
+  import predicates._
+
 
   trait AnyTGraph extends Any {
 
@@ -149,6 +151,16 @@ case object implementations {
           .direction(Direction.IN)
           .vertexIds.asContainer
       }
+  }
+
+  // Here RawPredicate is the filtered list of elements
+  case class TitanPredicateImpl[P <: AnyPredicate, TE <: TitanElement]()
+    extends PredicateImpl[P, Container[TE], Container[TE]] {
+
+    def quantify(e: RawElement, p: Predicate): RawPredicate =
+      e filter { evalPredicate(p, _) }
+
+    def coerce(p: RawPredicate): RawElement = p
   }
 
 }

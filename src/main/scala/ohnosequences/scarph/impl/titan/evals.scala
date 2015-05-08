@@ -135,6 +135,10 @@ case object evals {
       def present(morph: InMorph): String = morph.label
     }
 
+    implicit final def predicateImpl[P <: AnyPredicate, E <: titan.TitanElement]:
+      TitanPredicateImpl[P, E] =
+      TitanPredicateImpl[P, E]()
+
   }
 
 }

@@ -38,6 +38,13 @@ case object implementations {
     @inline final def rightProj(t: RawTensor): RawRight = t.right
   }
 
+  case class TitanMatchUpImpl[T]() extends MatchUpImpl[Container[T]] {
+
+    @inline final def matchUp(l: Raw, r: Raw): Raw =
+      l flatMap { x =>
+        r filter { _ == x }
+      }
+  }
 
   case class TitanUnitVertexImpl[V <: AnyVertex](val g: TitanGraph)
     extends AnyVal with AnyTGraph with UnitImpl[V, TitanVertices, TitanGraph] {

@@ -48,6 +48,10 @@ case object evals {
     implicit final def tensorImpl[L, R]:
       TitanTensorImpl[L, R] =
       TitanTensorImpl[L, R]()
+    
+    implicit final def matchUpImpl[T]:
+      TitanMatchUpImpl[T] =
+      TitanMatchUpImpl[T]()
 
 
     implicit final def unitVertexImpl[V <: AnyVertex]:

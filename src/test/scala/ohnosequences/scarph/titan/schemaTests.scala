@@ -1,11 +1,9 @@
 package ohnosequences.scarph.impl.titan.test
 
-import ohnosequences.scarph._, schemas._, graphTypes._, monoidalStructures._
+import ohnosequences.scarph._, objects._
 import com.thinkaurelius.titan.{ core => titan }
-import titan.TitanGraph
-import titan.schema.TitanManagement
+//import scala.reflect.runtime.universe._*/
 
-import scala.reflect.runtime.universe._
 
 object schemaTests {
 
@@ -21,7 +19,8 @@ object schemaTests {
 
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
-  import ohnosequences.scarph._, evals._, morphisms._, syntax.morphisms._
+  import ohnosequences.scarph._, evals._, morphisms._
+  import syntax.objects._, syntax.morphisms._
   import ohnosequences.scarph.impl.titan.evals._
 
   object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
@@ -33,15 +32,39 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.implementations._
     import ohnosequences.scarph.impl.titan.types._
 
-    val query = lookup(user.name) outV posted inV posted get user.name
+    val query = lookup(user.name)
+      .outV(posted)
+      //.quantify(tweet ? (tweet.url =/= "foo"))
+      //.coerce
+      //.get(tweet.text)
+      .inV(posted)
+      .filter(user ? (user.name =/= "@evdokim") and (user.age > 20))
+      .get(user.name)
+      //.inE(posted)
+      //.quantify(posted ? (posted.time =/= ""))
+      //.coerce
+      //.get(posted.time)
 
     implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 
-    lazy val z = evaluate(query) on (
-        name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
-      )
+    println("\n----------------")
+    println("rewritten query:")
+    println(evaluate(rewrite(query)).evalPlan)
 
-    println( z.value.map { x => x.toString } )
+    lazy val z = evaluate(query) on (
+      name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
+    )
+
+    println("\n----------------")
+    println("predicates:")
+    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForEdges.toString) }*/
+    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForProperties.toString) }*/
+
+    println("\n----------------")
+    println("results:")
+    z.value.foreach(println)
+
+    println("\n----------------")
   }
 
 

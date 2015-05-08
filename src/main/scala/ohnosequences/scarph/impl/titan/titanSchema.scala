@@ -3,7 +3,7 @@ package ohnosequences.scarph.impl.titan
 object titanSchema {
 
   import ohnosequences.scarph.schemas._
-  import ohnosequences.scarph.graphTypes._
+  import ohnosequences.scarph.objects._
   import com.thinkaurelius.titan.{ core => titan }
   import titan.TitanGraph
   import titan.schema.TitanManagement

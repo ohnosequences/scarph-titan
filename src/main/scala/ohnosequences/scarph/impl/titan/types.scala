@@ -10,9 +10,10 @@ case object types {
   final type JIterable[T]    = java.lang.Iterable[T]
   final type TitanVertices   = Container[titan.TitanVertex]
   final type TitanEdges      = Container[titan.TitanEdge]
+  final type TitanQueries    = Container[blueprints.Query]
   final type TitanGraph      = titan.TitanGraph
 
-  final def zero[T]: Container[T] = Seq()
+  final def titanZero[T]: Container[T] = Seq()
 
   implicit final def containerOps[T](cs: Container[T]): ContainerOps[T] = ContainerOps[T](cs)
   case class ContainerOps[T](val cs: Container[T]) extends AnyVal {

@@ -32,10 +32,10 @@ case object implementations {
 
   case class TitanTensorImpl[L, R]() extends TensorImpl[TitanTensor[L, R], Container[L], Container[R]] {
 
-    @inline final def apply(l: RawLeft, r: RawRight): RawTensor = TitanTensor[L, R](l, r)
+    def apply(l: RawLeft, r: RawRight): RawTensor = TitanTensor[L, R](l, r)
 
-    @inline final def leftProj(t: RawTensor): RawLeft = t.left
-    @inline final def rightProj(t: RawTensor): RawRight = t.right
+    def leftProj(t: RawTensor): RawLeft = t.left
+    def rightProj(t: RawTensor): RawRight = t.right
   }
 
   case class TitanMatchUpImpl[T]() extends MatchUpImpl[Container[T]] {

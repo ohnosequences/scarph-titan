@@ -19,7 +19,7 @@ object schemaTests {
 
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
-  import ohnosequences.scarph._, evals._, morphisms._
+  import ohnosequences.scarph._, evals._, morphisms._, rewrites._
   import syntax.objects._, syntax.morphisms._
   import ohnosequences.scarph.impl.titan.evals._
 
@@ -32,30 +32,44 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.implementations._
     import ohnosequences.scarph.impl.titan.types._
 
-    val query = lookup(user.name)
-      .outV(posted)
+    //val query = lookup(user.name)*/
+      //.outV(posted)*/
       //.quantify(tweet ? (tweet.url =/= "foo"))
       //.coerce
       //.get(tweet.text)
-      .inV(posted)
+      //.inV(posted)*/
       //.filter(user ? (user.name =/= "@evdokim") and (user.age > 20))*/
-      .duplicate
-      .matchUp
-      .get(user.name)
+      //.duplicate*/
+      //.andThen(get(user.name) ⊗ get(user.name))*/
+      //.matchUp
+      //.get(user.name)
       //.inE(posted)
       //.quantify(posted ? (posted.time =/= ""))
       //.coerce
       //.get(posted.time)
 
-    implicit def toCont[T](ts: Seq[T]): Container[T] = ts
+    val query = duplicate(user) >=> (id(user) ⊗ id(user)) >=> (outV(posted) ⊗ outV(posted)) >=> matchUp(tweet)
+    //val query = id(user) >=> id(user) */
+    //val query = inV(posted) >=> outV(posted) >=>*/
+    //val query = (get(user.name) ⊗ get(user.name))*/
+
+    //(get(user.name) ⊗ get(user.name))*/
+
+    //implicit def toCont[T](ts: Seq[T]): Container[T] = ts*/
 
     println("\n----------------")
     println("rewritten query:")
-    println(evaluate(rewrite(query)).evalPlan)
+    println(rewrite(query).label)
+    println(evaluate(query)
+      //(eval_composition(
+      //  eval_tensor(titanTwitterEvals.tensorImplV, titanTwitterEvals.tensorImplV, eval_id[Container[titan.TitanVertex], user.type], //eval_id[Container[titan.TitanVertex], user.type]),
+      //  eval_tensor(titanTwitterEvals.tensorImplV, titanTwitterEvals.tensorImplV, eval_outV, eval_outV))
+      //)
+    .evalPlan)
 
-    lazy val z = evaluate(query) on (
-      name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
-    )
+    //lazy val z = evaluate(query) on (
+    //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
+    //)
 
     println("\n----------------")
     println("predicates:")
@@ -64,7 +78,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     println("\n----------------")
     println("results:")
-    z.value.foreach(println)
+    //z.value.foreach(println)*/
 
     println("\n----------------")
   }
@@ -76,7 +90,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   val graphLocation = new File("/tmp/titanTest")
   var g: TitanGraph = null
 
-  override final def beforeAll() {
+  /*override final def beforeAll() {
 
     def cleanDir(f: File) {
       if (f.isDirectory) f.listFiles.foreach(cleanDir(_))
@@ -108,5 +122,5 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       g.shutdown
       println("Shutdown Titan graph")
     }
-  }
+  }*/
 }

@@ -46,8 +46,8 @@ case object types {
 
   case class TitanBiproduct[L, R](val both: (Container[L], Container[R])) extends AnyVal {
 
-    type Left = L
-    type Right = R
+    type Left = Container[L]
+    type Right = Container[R]
 
     @inline final def left  = both._1
     @inline final def right = both._2
@@ -57,7 +57,7 @@ case object types {
 
   case class TitanTensor[L, R](val left: Container[L], val right: Container[R]) {
 
-    type Left = L
-    type Right = R
+    type Left = Container[L]
+    type Right = Container[R]
   }
 }

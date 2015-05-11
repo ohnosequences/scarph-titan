@@ -5,7 +5,7 @@ case object evals {
   import types._, implementations._, predicates._
 
   import ohnosequences.{ scarph => s }
-  import s.objects._, s.morphisms._, s.evals._
+  import s.objects._, s.morphisms._, s.evals._, s.rewrites._
 
   import com.thinkaurelius.titan.{ core => titan }
   import com.tinkerpop.blueprints
@@ -14,7 +14,7 @@ case object evals {
 
   trait DefaultTitanEvals extends TitanRewriteRules {}
 
-  trait TitanRewriteRules extends SpecificTitanEvals {}
+  trait TitanRewriteRules extends AnyRewriteStrategy with SpecificTitanEvals {}
 
   trait SpecificTitanEvals extends DerivedTitanEvals {
 
@@ -45,10 +45,14 @@ case object evals {
 
   trait DerivedTitanEvals extends LowPriorityEvals {
 
-    implicit final def tensorImpl[L, R]:
-      TitanTensorImpl[L, R] =
-      TitanTensorImpl[L, R]()
-    
+    implicit final def tensorImplV:
+      TitanTensorImpl[titan.TitanVertex, titan.TitanVertex] =
+      TitanTensorImpl[titan.TitanVertex, titan.TitanVertex]()
+
+    //implicit final def tensorImpl[L, R]:
+    //  TitanTensorImpl[L, R] =
+    //  TitanTensorImpl[L, R]()
+
     implicit final def matchUpImpl[T]:
       TitanMatchUpImpl[T] =
       TitanMatchUpImpl[T]()

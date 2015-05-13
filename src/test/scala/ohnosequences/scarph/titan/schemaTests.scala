@@ -48,23 +48,26 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       //.coerce
       //.get(posted.time)
 
-    val query = duplicate(user) >=> (id(user) ⊗ id(user)) >=> (outV(posted) ⊗ outV(posted)) >=> matchUp(tweet)
-    //val query = id(user) >=> id(user) */
-    //val query = inV(posted) >=> outV(posted) >=>*/
-    //val query = (get(user.name) ⊗ get(user.name))*/
+    val query =
+      lookup(user.name) >=>
+      duplicate(user) >=>
+      TensorMorph(id(user), id(user)) >=>
+      TensorMorph(outV(posted), outV(posted)) >=>
+      matchUp(tweet)
 
-    //(get(user.name) ⊗ get(user.name))*/
+    implicit def toCont[T](ts: Seq[T]): Container[T] = ts
 
-    //implicit def toCont[T](ts: Seq[T]): Container[T] = ts*/
+    val in = name := toCont(Seq("@laughedelic", "@eparejatobes", "@evdokim"))
 
     println("\n----------------")
     println("rewritten query:")
     println(rewrite(query).label)
-    println(evaluate(query)
-      //(eval_composition(
-      //  eval_tensor(titanTwitterEvals.tensorImplV, titanTwitterEvals.tensorImplV, eval_id[Container[titan.TitanVertex], user.type], //eval_id[Container[titan.TitanVertex], user.type]),
-      //  eval_tensor(titanTwitterEvals.tensorImplV, titanTwitterEvals.tensorImplV, eval_outV, eval_outV))
-      //)
+
+    println(evaluate.apply(query, in)
+    //  (eval_composition(
+    //    eval_tensor(titanTwitterEvals.tensorImpl, titanTwitterEvals.tensorImpl, eval_id[Container[titan.TitanVertex], user.type], eval_id[Container[titan.TitanVertex], user.type]),
+    //    eval_tensor(titanTwitterEvals.tensorImpl, titanTwitterEvals.tensorImpl, eval_outV, eval_outV))
+    //  )
     .evalPlan)
 
     //lazy val z = evaluate(query) on (

@@ -45,13 +45,13 @@ case object evals {
 
   trait DerivedTitanEvals extends LowPriorityEvals {
 
-    implicit final def tensorImplV:
-      TitanTensorImpl[titan.TitanVertex, titan.TitanVertex] =
-      TitanTensorImpl[titan.TitanVertex, titan.TitanVertex]()
+    //implicit final def tensorImplV:
+    //  TitanTensorImpl[titan.TitanVertex, titan.TitanVertex] =
+    //  TitanTensorImpl[titan.TitanVertex, titan.TitanVertex]()
 
-    //implicit final def tensorImpl[L, R]:
-    //  TitanTensorImpl[L, R] =
-    //  TitanTensorImpl[L, R]()
+    implicit final def tensorImpl[L, R]:
+      TitanTensorImpl[L, R] =
+      TitanTensorImpl[L, R]()
 
     implicit final def matchUpImpl[T]:
       TitanMatchUpImpl[T] =

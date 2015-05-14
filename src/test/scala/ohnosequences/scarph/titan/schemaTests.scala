@@ -49,35 +49,21 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       //.get(posted.time)
 
     val query =
-      lookup(user.name) >=>
+      inV(follows) >=>
       duplicate(user) >=>
-      TensorMorph(id(user), id(user)) >=>
-      TensorMorph(outV(posted), outV(posted)) >=>
+      (outV(follows) ⊗ inV(follows)) >=>
+      (outV(posted) ⊗ outV(posted)) >=>
       matchUp(tweet)
-
-    implicit def toCont[T](ts: Seq[T]): Container[T] = ts
-
-    val in = name := toCont(Seq("@laughedelic", "@eparejatobes", "@evdokim"))
 
     println("\n----------------")
     println("rewritten query:")
     println(rewrite(query).label)
 
-    println(evaluate.apply(query, in)
-    //  (eval_composition(
-    //    eval_tensor(titanTwitterEvals.tensorImpl, titanTwitterEvals.tensorImpl, eval_id[Container[titan.TitanVertex], user.type], eval_id[Container[titan.TitanVertex], user.type]),
-    //    eval_tensor(titanTwitterEvals.tensorImpl, titanTwitterEvals.tensorImpl, eval_outV, eval_outV))
-    //  )
-    .evalPlan)
+    println(evaluate(query).evalPlan)
 
     //lazy val z = evaluate(query) on (
     //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
     //)
-
-    println("\n----------------")
-    println("predicates:")
-    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForEdges.toString) }*/
-    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForProperties.toString) }*/
 
     println("\n----------------")
     println("results:")

@@ -48,18 +48,27 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       //.coerce
       //.get(posted.time)
 
-    val query =
+    val query1 =
       inV(follows) >=>
       duplicate(user) >=>
       (outV(follows) ⊗ inV(follows)) >=>
       (outV(posted) ⊗ outV(posted)) >=>
       matchUp(tweet)
 
+    val query2 =
+      inV(follows)
+      .duplicate
+      .andThen(outV(follows) ⊗ inV(follows))
+      .andThen(outV(posted) ⊗ outV(posted))
+      .matchUp
+
+    assert(query1 == query2)
+
     println("\n----------------")
     println("rewritten query:")
-    println(rewrite(query).label)
+    println(rewrite(query2).label)
 
-    println(evaluate(query).evalPlan)
+    println(evaluate(query2).evalPlan)
 
     //lazy val z = evaluate(query) on (
     //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")

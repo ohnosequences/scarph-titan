@@ -6,10 +6,7 @@ case object types {
   import com.thinkaurelius.titan.{ core => titan }
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
 
-  sealed trait AnyTitanType {
-
-    //val zero: this.type*/
-  }
+  sealed trait AnyTitanType
 
   trait AnyDuplet extends AnyTitanType {
 
@@ -24,8 +21,6 @@ case object types {
 
     type Left = L
     type Right = R
-
-    //lazy val zero = Duplet(left.zero, right.zero)*/
   }
 
   trait AnyContainer extends AnyTitanType {
@@ -39,11 +34,7 @@ case object types {
     def filter(f: Inside => Boolean): Container[Inside] = Container(values.filter(f))
   }
 
-  case class Container[T](val values: Iterable[T]) extends AnyContainer {
-    type Inside = T
-
-    //lazy val zero = Container[T](Seq())*/
-  }
+  case class Container[T](val values: Iterable[T]) extends AnyContainer { type Inside = T }
 
 
   final type TitanVertices   = Container[titan.TitanVertex]

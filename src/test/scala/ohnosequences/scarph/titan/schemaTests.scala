@@ -14,7 +14,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   // object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
   // import titanTwitterEvals._
   import ohnosequences.scarph.impl.titan.evals.categoryStructure._
-  import ohnosequences.scarph.impl.titan.evals.tensorStructure._
+  val tstr = ohnosequences.scarph.impl.titan.evals.tensorStructure(null: titan.TitanGraph); import tstr._
   import ohnosequences.scarph.impl.titan.evals.graphStructure._
 
   test("eval basic queries over sample twitter graph") {
@@ -77,7 +77,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import com.thinkaurelius.titan.core._
 
   val graphLocation = new File("/tmp/titanTest")
-  var g: TitanGraph = null
+  var g: titan.TitanGraph = null
 
   /*override final def beforeAll() {
 

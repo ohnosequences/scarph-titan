@@ -19,7 +19,7 @@ case object evals {
     type RawObject = AnyTitanType
   }
 
-  case object tensorStructure extends TensorStructure {
+  case class tensorStructure(val graph: titan.TitanGraph) extends TensorStructure {
 
     type RawObject = AnyTitanType
     type RawTensor[L <: RawObject, R <: RawObject] = Duplet[L, R]
@@ -28,9 +28,50 @@ case object evals {
     def construct[L <: RawObject, R <: RawObject](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
     def leftProjRaw[L <: RawObject, R <: RawObject](t: RawTensor[L, R]): L = t.left
     def rightProjRaw[L <: RawObject, R <: RawObject](t: RawTensor[L, R]): R = t.right
-    def matchUpRaw[X <: RawObject](t: RawTensor[X, X]): X = ???
-    //def fromUnitRaw[X <: RawObject](u: RawUnit): X*/
-    def toUnitRaw[X <: RawObject](x: X): RawUnit = ???
+    def toUnitRaw[X <: RawObject](x: X): RawUnit = graph
+
+    implicit def titanUnitToVertices:
+        FromUnit[TitanUnit, TitanVertices] =
+    new FromUnit[TitanUnit, TitanVertices] {
+
+      def fromUnit(u: U, e: AnyGraphObject): T =
+        Container(graph.query.has("label", e.label)
+          .vertices.asTitanVertices)
+    }
+
+    implicit def titanUnitToEdges:
+        FromUnit[TitanUnit, TitanEdges] =
+    new FromUnit[TitanUnit, TitanEdges] {
+
+      def fromUnit(u: U, e: AnyGraphObject): T =
+        Container(graph.query.has("label", e.label)
+          .edges.asTitanEdges)
+    }
+
+
+    implicit def containerMatch[X]:
+        Matchable[Container[X]] =
+    new Matchable[Container[X]] {
+
+      def matchUp(l: T, r: T): T =
+        Container(
+          l.values.flatMap { x =>
+            r.values.filter { _ == x }
+          }
+        )
+    }
+
+    implicit def dupletMatch[X <: AnyTitanType](implicit
+      t: Matchable[X]
+    ):  Matchable[Duplet[X, X]] =
+    new Matchable[Duplet[X, X]] {
+
+      def matchUp(l: T, r: T): T = Duplet(
+        t.matchUp(l.left, r.left),
+        t.matchUp(l.right, r.right)
+      )
+    }
+
   }
 
   case object graphStructure extends GraphStructure {
@@ -92,46 +133,6 @@ case object evals {
       def present(morph: InMorph): String = morph.label
     }
   }
-*/
-
-/*
-  trait DerivedTitanEvals { //extends LowPriorityEvals {
-
-    // △: X → X ⊗ X
-    implicit final def eval_duplicate[
-      T <: AnyTitanType, X <: AnyGraphObject
-    ]:  Eval[T, duplicate[X], Duplet[T, T]] =
-    new Eval[T, duplicate[X], Duplet[T, T]] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := Duplet(input.value, input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // ▽: X ⊗ X → X
-    implicit final def eval_matchUp_container[
-      T, X <: AnyGraphObject
-    ]:  Eval[Duplet[Container[T], Container[T]], matchUp[X], Container[T]] =
-    new Eval[Duplet[Container[T], Container[T]], matchUp[X], Container[T]] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        val l: Iterable[T] = input.value.left.values
-        val r: Iterable[T] = input.value.right.values
-
-        morph.out := Container(
-          l.flatMap{ x =>
-            r.filter{ _ == x }
-          }
-        )
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // TODO: recursion for duplet
-    //implicit final def eval_matchUp_duplet[
 */
 
 /*
@@ -264,93 +265,6 @@ case object evals {
 */
 
 /*
-    implicit final def eval_inE[
-      I, E <: AnyEdge, IE, IV
-    ](implicit
-      vImpl:  VertexInImpl[E, I, IE, IV]
-    ):  Eval[I, inE[E], IE] =
-    new Eval[I, inE[E], IE] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := vImpl.inE(input.value, morph.edge)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def eval_outE[
-      I, E <: AnyEdge, OE, OV
-    ](implicit
-      vImpl:  VertexOutImpl[E, I, OE, OV]
-    ):  Eval[I, outE[E], OE] =
-    new Eval[I, outE[E], OE] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := vImpl.outE(input.value, morph.edge)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def eval_source[
-      E <: AnyEdge, I, S, T
-    ](implicit
-      eImpl: EdgeImpl[I, S, T]
-    ):  Eval[I, source[E], S] =
-    new Eval[I, source[E], S] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := eImpl.source(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def eval_target[
-      E <: AnyEdge, I, S, T
-    ](implicit
-      eImpl: EdgeImpl[I, S, T]
-    ):  Eval[I, target[E], T] =
-    new Eval[I, target[E], T] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := eImpl.target(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-
-    // I → X
-    implicit final def eval_fromUnit[
-      O <: AnyGraphObject, RawObj, RawUnit
-    ](implicit
-      unitImpl:  UnitImpl[O, RawObj, RawUnit]
-    ):  Eval[RawUnit, fromUnit[O], RawObj] =
-    new Eval[RawUnit, fromUnit[O], RawObj] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := unitImpl.fromUnit(input.value, morph.obj)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // X → I
-    implicit final def eval_toUnit[
-      O <: AnyGraphObject, RawObj, RawUnit
-    ](implicit
-      unitImpl:  UnitImpl[O, RawObj, RawUnit]
-    ):  Eval[RawObj, toUnit[O], RawUnit] =
-    new Eval[RawObj, toUnit[O], RawUnit] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := unitImpl.toUnit(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
     implicit final def eval_get[
       P <: AnyProperty, RawElem, RawValue
     ](implicit

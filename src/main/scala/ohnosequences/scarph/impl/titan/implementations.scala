@@ -16,11 +16,6 @@ case object implementations {
   import predicates._
 
 
-  trait AnyTGraph extends Any {
-
-    def g: TitanGraph
-  }
-
 /*
   case class TitanBiproductImpl[L <: AnyTitanType, R <: AnyTitanType](lzero: L, rzero: R) extends BiproductImpl[TitanDuplet[L, R], L, R] {
 

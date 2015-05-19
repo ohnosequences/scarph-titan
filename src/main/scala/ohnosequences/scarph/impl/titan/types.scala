@@ -5,6 +5,7 @@ case object types {
   import com.tinkerpop.blueprints
   import com.thinkaurelius.titan.{ core => titan }
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
+  import ohnosequences.scarph._, objects._, evals._
 
   sealed trait AnyTitanType
 
@@ -37,12 +38,12 @@ case object types {
   case class Container[T](val values: Iterable[T]) extends AnyContainer { type Inside = T }
 
 
-  final type TitanVertices   = Container[titan.TitanVertex]
-  final type TitanEdges      = Container[titan.TitanEdge]
-  final type TitanQueries    = Container[blueprints.Query]
+  final type TitanVertices = Container[titan.TitanVertex]
+  final type TitanEdges    = Container[titan.TitanEdge]
+  final type TitanQueries  = Container[blueprints.Query]
 
-  final type JIterable[T]    = java.lang.Iterable[T]
-  final type TitanGraph      = titan.TitanGraph
+  final type JIterable[T]  = java.lang.Iterable[T]
+  final type TitanUnit     = titan.TitanGraph
 
   trait ZeroFor[TT <: AnyTitanType] {
 
@@ -56,7 +57,7 @@ case object types {
     val zero = Container[T](Seq())
   }
 
-  implicit def containerDuplet[L <: AnyTitanType, R <: AnyTitanType](implicit
+  implicit def dupletZero[L <: AnyTitanType, R <: AnyTitanType](implicit
     l: ZeroFor[L],
     r: ZeroFor[R]
   ):  ZeroFor[Duplet[L, R]] =
@@ -65,53 +66,9 @@ case object types {
     val zero = Duplet[L, R](l.zero, r.zero)
   }
 
-/*
-  trait Mappable[T <: AnyTitanType] {
-
-    type In = T
-    type F
-    type Out <: AnyTitanType
-    def map(in: In, f: F): Out
-  }
-
-  implicit def containerMappable[X, Y]:
-      Mappable[Container[X]] =
-  new Mappable[Container[X]] {
-
-    type F = X => Y
-    type Out = Container[Y]
-
-    def map(in: In, f: F): Out = Container(in.values.map(f))
-  }
-
-  implicit def DupletMappable[LX, LY, RX, RY]:
-      Mappable[Duplet[LX, RX] =
-  new Mappable[Duplet[LX, RX] {
-
-    type F = (LX => LY, RX => RY)
-    type Out = Duplet[LY, RY]
-
-    def map(in: In, f: F): Out = Duplet(in.left)
-  }
-*/
-
-//  case class TitanVertices(val values: Container[titan.TitanVertex])
-//    extends AnyTitanObject { type Inside = titan.TitanVertex }
-//
-//  case class TitanEdges(val values: Container[titan.TitanEdge])
-//    extends AnyTitanObject { type Inside = titan.TitanEdge }
-//
-//  case class TitanQueries(val values: Container[blueprints.Query])
-//    extends AnyTitanObject { type Inside = blueprints.Query }
 
 
-//  final def titanZero[T]: Container[T] = Seq()
-
-//  implicit final def containerOps[T](cs: Container[T]): ContainerOps[T] = ContainerOps[T](cs)
-//  case class ContainerOps[T](val cs: Container[T]) extends AnyVal {
-//
-//    @inline final def asJIterable: JIterable[T] = cs.values.asJava
-//  }
+  /* Conversions */
 
   implicit final def jIterableOps[T](ts: JIterable[T]): JIterableOps[T] = JIterableOps[T](ts)
   case class JIterableOps[T](val ts: JIterable[T]) extends AnyVal {

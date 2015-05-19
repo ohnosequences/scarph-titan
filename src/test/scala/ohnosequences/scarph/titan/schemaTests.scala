@@ -5,26 +5,17 @@ import com.thinkaurelius.titan.{ core => titan }
 //import scala.reflect.runtime.universe._*/
 
 
-object schemaTests {
-
-  // import ohnosequences.scarph.test._
-
-  case object uh extends ValueOfType[String]("uh")
-  case object ah extends Vertex("hola!") {
-    case object name extends Property(ah -> uh)("argh")
-    case object aaaa extends Property(ah -> uh)("aaaa")
-    case object bbbb extends Property(ah -> uh)("bbbb")
-  }
-}
-
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
   import ohnosequences.scarph._, evals._, morphisms._, rewrites._
   import syntax.objects._, syntax.morphisms._
   import ohnosequences.scarph.impl.titan.evals._
 
-  object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
-  import titanTwitterEvals._
+  // object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
+  // import titanTwitterEvals._
+  import ohnosequences.scarph.impl.titan.evals.categoryStructure._
+  import ohnosequences.scarph.impl.titan.evals.tensorStructure._
+  import ohnosequences.scarph.impl.titan.evals.graphStructure._
 
   test("eval basic queries over sample twitter graph") {
 
@@ -66,9 +57,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     println("\n----------------")
     println("rewritten query:")
-    println(rewrite(query2).label)
+    // println(rewrite(query2).label)
 
-    println(evaluate(query2).evalPlan)
+    println(evalOn[TitanVertices](query1).evalPlan)
 
     //lazy val z = evaluate(query) on (
     //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")

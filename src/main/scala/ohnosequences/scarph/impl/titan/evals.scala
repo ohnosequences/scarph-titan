@@ -14,13 +14,60 @@ case object evals {
   import com.tinkerpop.blueprints.Direction
 
 
+  case object categoryStructure extends CategoryStructure {
+
+    type RawObject = AnyTitanType
+  }
+
+  case object tensorStructure extends TensorStructure {
+
+    type RawObject = AnyTitanType
+    type RawTensor[L <: RawObject, R <: RawObject] = Duplet[L, R]
+    type RawUnit = titan.TitanGraph
+
+    def construct[L <: RawObject, R <: RawObject](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
+    def leftProjRaw[L <: RawObject, R <: RawObject](t: RawTensor[L, R]): L = t.left
+    def rightProjRaw[L <: RawObject, R <: RawObject](t: RawTensor[L, R]): R = t.right
+    def matchUpRaw[X <: RawObject](t: RawTensor[X, X]): X = ???
+    //def fromUnitRaw[X <: RawObject](u: RawUnit): X*/
+    def toUnitRaw[X <: RawObject](x: X): RawUnit = ???
+  }
+
+  case object graphStructure extends GraphStructure {
+
+    type RawEdge = TitanEdges
+    type RawSource = TitanVertices
+    type RawTarget = TitanVertices
+
+    def outVRaw(edge: AnyEdge)(v: RawSource): RawTarget =
+      Container(
+        v.values flatMap {
+          _.query
+            .labels(edge.label)
+            .direction(Direction.OUT)
+            .vertexIds.asScala
+        }
+      )
+
+    def inVRaw(edge: AnyEdge)(v: RawTarget): RawSource =
+      Container(
+        v.values flatMap {
+          _.query
+            .labels(edge.label)
+            .direction(Direction.IN)
+            .vertexIds.asScala
+        }
+      )
+
+  }
+
+/*
   trait DefaultTitanEvals extends TitanRewriteRules {}
 
   trait TitanRewriteRules extends AnyRewriteStrategy with SpecificTitanEvals {}
 
   trait SpecificTitanEvals extends DerivedTitanEvals {
 
-    /*
     implicit final def eval_quantify_[I, M <: AnyGraphMorphism { type Out = P#Element }, P <: AnyPredicate](
       implicit eval_previous: Eval[I, M, TitanQueries]
     ):  Eval[I, M >=> quantify[P], TitanQueries] =
@@ -44,88 +91,11 @@ case object evals {
 
       def present(morph: InMorph): String = morph.label
     }
-    */
   }
-
-  trait DerivedTitanEvals { //extends LowPriorityEvals {
-
-    // X = X (does nothing)
-    implicit final def eval_id[
-      T <: AnyTitanType, X <: AnyGraphObject
-    ]:  Eval[T, id[X], T] =
-    new Eval[T, id[X], T] {
-
-      final def apply(morph: InMorph): OutMorph = { input: Input => input }
-
-      final def present(morph: InMorph): String = morph.label
-    }
-
-
-    // F >=> S
-    implicit final def eval_composition[
-      F <: AnyGraphMorphism,
-      S <: AnyGraphMorphism { type In = F#Out },
-      I <: AnyTitanType, X <: AnyTitanType, O <: AnyTitanType
-    ](implicit
-      evalFirst:  Eval[I, F, X],
-      evalSecond: Eval[X, S, O]
-    ):  Eval[I, F >=> S, O] =
-    new Eval[I, F >=> S, O] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-
-        val firstResult = evalFirst(morph.first)(input)
-        evalSecond(morph.second)(morph.second.in := firstResult.value)
-      }
-
-      def present(morph: InMorph): String = s"(${evalFirst.present(morph.first)} >=> ${evalSecond.present(morph.second)})"
-    }
-
-    // IL ⊗ IR → OL ⊗ OR
-    implicit final def eval_tensor[
-      L <: AnyGraphMorphism, R <: AnyGraphMorphism,
-      IL <: AnyTitanType, IR <: AnyTitanType,
-      OL <: AnyTitanType, OR <: AnyTitanType
-    ](implicit
-      evalLeft:  Eval[IL, L, OL],
-      evalRight: Eval[IR, R, OR]
-    ):  Eval[Duplet[IL, IR], TensorMorph[L, R], Duplet[OL, OR]] =
-    new Eval[Duplet[IL, IR], TensorMorph[L, R], Duplet[OL, OR]] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := Duplet(
-          evalLeft(morph.left)  ( (morph.left.in:  L#In) := input.value.left ).value,
-          evalRight(morph.right)( (morph.right.in: R#In) := input.value.right ).value
-        )
-      }
-
-      def present(morph: InMorph): String = s"(${evalLeft.present(morph.left)} ⊗ ${evalRight.present(morph.right)})"
-    }
+*/
 
 /*
-    // IL ⊕ IR → OL ⊕ OR
-    implicit final def eval_biproduct[
-      IL, IR, I,
-      L <: AnyGraphMorphism, R <: AnyGraphMorphism,
-      OL, OR, O
-    ](implicit
-      inBip:  BiproductImpl[I, IL, IR],
-      outBip: BiproductImpl[O, OL, OR],
-      evalLeft:  Eval[IL, L, OL],
-      evalRight: Eval[IR, R, OR]
-    ):  Eval[I, BiproductMorph[L, R], O] =
-    new Eval[I, BiproductMorph[L, R], O] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := outBip(
-          evalLeft(morph.left)  ( (morph.left.in:  L#In) := inBip.leftProj(input.value) ).value,
-          evalRight(morph.right)( (morph.right.in: R#In) := inBip.rightProj(input.value) ).value
-        )
-      }
-
-      def present(morph: InMorph): String = s"(${evalLeft.present(morph.left)} ⊕ ${evalRight.present(morph.right)})"
-    }
-*/
+  trait DerivedTitanEvals { //extends LowPriorityEvals {
 
     // △: X → X ⊗ X
     implicit final def eval_duplicate[
@@ -162,6 +132,7 @@ case object evals {
 
     // TODO: recursion for duplet
     //implicit final def eval_matchUp_duplet[
+*/
 
 /*
     // X → X ⊕ X
@@ -260,6 +231,7 @@ case object evals {
     }
 */
 
+/*
     // 0 → X
     implicit final def eval_fromZero[
       T <: AnyTitanType, X <: AnyGraphObject
@@ -289,6 +261,7 @@ case object evals {
 
       def present(morph: InMorph): String = morph.label
     }
+*/
 
 /*
     implicit final def eval_inE[
@@ -318,47 +291,7 @@ case object evals {
 
       def present(morph: InMorph): String = morph.label
     }
-*/
 
-    implicit final def eval_inV[
-      E <: AnyEdge
-    ]:  Eval[TitanVertices, inV[E], TitanVertices] =
-    new Eval[TitanVertices, inV[E], TitanVertices] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := Container(
-          input.value.values flatMap {
-            _.query
-              .labels(morph.edge.label)
-              .direction(Direction.IN)
-              .vertexIds.asScala
-          }
-        )
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def eval_outV[
-      E <: AnyEdge
-    ]:  Eval[TitanVertices, outV[E], TitanVertices] =
-    new Eval[TitanVertices, outV[E], TitanVertices] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := Container(
-          input.value.values flatMap {
-            _.query
-              .labels(morph.edge.label)
-              .direction(Direction.OUT)
-              .vertexIds.asScala
-          }
-        )
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-/*
     implicit final def eval_source[
       E <: AnyEdge, I, S, T
     ](implicit
@@ -477,7 +410,6 @@ case object evals {
     }
     */
 
-  }
 
 /*
   trait LowPriorityEvals extends DefaultEvals {

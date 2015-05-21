@@ -89,7 +89,6 @@ case object evals {
             .vertexIds.asScala
         }
       )
-
     def inVRaw(edge: AnyEdge)(v: RawTarget): RawSource =
       Container(
         v.values flatMap {
@@ -99,6 +98,28 @@ case object evals {
             .vertexIds.asScala
         }
       )
+
+
+    def outERaw(edge: AnyEdge)(v: RawSource): RawEdge =
+      v flatMap {
+        _.query
+          .labels(edge.label)
+          .direction(Direction.OUT)
+          .titanEdges.asScala
+      }
+    def sourceRaw(edge: AnyEdge)(e: RawEdge): RawSource =
+      e map { _.getVertex(Direction.OUT) }
+
+
+    def inERaw(edge: AnyEdge)(v: RawTarget): RawEdge =
+      v flatMap {
+        _.query
+          .labels(edge.label)
+          .direction(Direction.IN)
+          .titanEdges.asScala
+      }
+    def targetRaw(edge: AnyEdge)(e: RawEdge): RawTarget =
+      e map { _.getVertex(Direction.IN) }
 
   }
 

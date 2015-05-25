@@ -30,6 +30,13 @@ case object implementations {
     @inline final def rightInj(r: RawRight): RawBiproduct = TitanBiproduct( (Seq(), r) )
   }
 
+  case class TitanMergeImpl[TE <: titan.TitanElement]()
+    extends MergeImpl[Container[TE]] {
+
+    def merge(l: Raw, r: Raw): Raw = l ++ r
+  }
+
+
   case class TitanTensorImpl[L, R]() extends TensorImpl[TitanTensor[L, R], Container[L], Container[R]] {
 
     @inline final def apply(l: RawLeft, r: RawRight): RawTensor = TitanTensor[L, R](l, r)

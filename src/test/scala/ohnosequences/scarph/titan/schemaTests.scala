@@ -38,7 +38,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       //.coerce
       //.get(tweet.text)
       .inV(posted)
-      .filter(user ? (user.name =/= "@evdokim") and (user.age > 20))
+      //.filter(user ? (user.name =/= "@evdokim") and (user.age > 20))*/
+      .duplicate
+      .matchUp
       .get(user.name)
       //.inE(posted)
       //.quantify(posted ? (posted.time =/= ""))

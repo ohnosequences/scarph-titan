@@ -16,6 +16,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import ohnosequences.scarph.impl.titan.evals.categoryStructure._
   val tstr = ohnosequences.scarph.impl.titan.evals.tensorStructure(null: titan.TitanGraph); import tstr._
   import ohnosequences.scarph.impl.titan.evals.graphStructure._
+  import ohnosequences.scarph.impl.titan.evals.biproductStructure._
 
   test("eval basic queries over sample twitter graph") {
 
@@ -41,17 +42,17 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     val query1 =
       inV(follows) >=>
-      duplicate(user) >=>
-      (outV(follows) ⊗ inV(follows)) >=>
-      (outV(posted) ⊗ outV(posted)) >=>
-      matchUp(tweet)
+      fork(user) >=>
+      (outV(follows) ⊕ inV(follows)) >=>
+      (outV(posted) ⊕ outV(posted)) >=>
+      merge(tweet)
 
     val query2 =
       inV(follows)
-      .duplicate
-      .andThen(outV(follows) ⊗ inV(follows))
-      .andThen(outV(posted) ⊗ outV(posted))
-      .matchUp
+      .fork
+      .andThen(outV(follows) ⊕ inV(follows))
+      .andThen(outV(posted) ⊕ outV(posted))
+      .merge
 
     assert(query1 == query2)
 
@@ -59,7 +60,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     println("rewritten query:")
     // println(rewrite(query2).label)
 
-    println(evalOn[TitanVertices](query1).evalPlan)
+    println(evalOn[TitanVertices](query2).evalPlan)
 
     //lazy val z = evaluate(query) on (
     //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")

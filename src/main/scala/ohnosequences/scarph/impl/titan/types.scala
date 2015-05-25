@@ -9,6 +9,10 @@ case object types {
 
   sealed trait AnyTitanType
 
+  case object TitanZero extends AnyTitanType
+  type TitanZero = TitanZero.type
+
+
   trait AnyDuplet extends AnyTitanType {
 
     type Left <: AnyTitanType
@@ -44,27 +48,6 @@ case object types {
 
   final type JIterable[T]  = java.lang.Iterable[T]
   final type TitanUnit     = titan.TitanGraph
-
-  trait ZeroFor[TT <: AnyTitanType] {
-
-    val zero: TT
-  }
-
-  implicit def containerZero[T]:
-      ZeroFor[Container[T]] =
-  new ZeroFor[Container[T]] {
-
-    val zero = Container[T](Seq())
-  }
-
-  implicit def dupletZero[L <: AnyTitanType, R <: AnyTitanType](implicit
-    l: ZeroFor[L],
-    r: ZeroFor[R]
-  ):  ZeroFor[Duplet[L, R]] =
-  new ZeroFor[Duplet[L, R]] {
-
-    val zero = Duplet[L, R](l.zero, r.zero)
-  }
 
 
 

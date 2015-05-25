@@ -123,6 +123,54 @@ case object evals {
 
   }
 
+  case object biproductStructure extends BiproductStructure {
+
+    type RawObject = AnyTitanType
+    type RawBiproduct[L <: RawObject, R <: RawObject] = Duplet[L, R]
+    type RawZero = TitanZero
+
+    def construct[L <: RawObject, R <: RawObject](l: L, r: R): RawBiproduct[L, R] = Duplet(l, r)
+    def leftProjRaw[L <: RawObject, R <: RawObject](t: RawBiproduct[L, R]): L = t.left
+    def rightProjRaw[L <: RawObject, R <: RawObject](t: RawBiproduct[L, R]): R = t.right
+    def toZeroRaw[X <: RawObject](x: X): RawZero = TitanZero
+
+    implicit def containerZero[X]:
+        ZeroFor[Container[X]] =
+    new ZeroFor[Container[X]] {
+
+      def zero(o: AnyGraphObject): T = Container[X](Seq())
+    }
+
+    implicit def dupletZero[L <: AnyTitanType, R <: AnyTitanType](implicit
+      l: ZeroFor[L],
+      r: ZeroFor[R]
+    ):  ZeroFor[Duplet[L, R]] =
+    new ZeroFor[Duplet[L, R]] {
+
+      def zero(o: AnyGraphObject): T = Duplet[L, R](l.zero(o), r.zero(o))
+    }
+
+
+    implicit def containerMerge[X]:
+        Mergeable[Container[X]] =
+    new Mergeable[Container[X]] {
+
+      def merge(l: T, r: T): T =
+        Container( l.values ++ r.values )
+    }
+
+    implicit def dupletMerge[X <: AnyTitanType](implicit
+      t: Mergeable[X]
+    ):  Mergeable[Duplet[X, X]] =
+    new Mergeable[Duplet[X, X]] {
+
+      def merge(l: T, r: T): T = Duplet(
+        t.merge(l.left, r.left),
+        t.merge(l.right, r.right)
+      )
+    }
+
+  }
 /*
   trait DefaultTitanEvals extends TitanRewriteRules {}
 
@@ -167,118 +215,6 @@ case object evals {
 
       def apply(morph: InMorph): OutMorph = { input: Input =>
         morph.out := outBip(input.value, input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // X ⊕ X → X
-    implicit final def eval_merge[
-      I, T <: AnyGraphObject, O
-    ](implicit
-      bipImpl: BiproductImpl[I, O, O],
-      mergeImpl: MergeImpl[O]
-    ):  Eval[I, merge[T], O] =
-    new Eval[I, merge[T], O] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := mergeImpl.merge(bipImpl.leftProj(input.value), bipImpl.rightProj(input.value))
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // L → L ⊕ R
-    implicit final def eval_leftInj[
-      L <: AnyGraphObject, R <: AnyGraphObject,
-      I, OR, O
-    ](implicit
-      outBip: BiproductImpl[O, I, OR]
-    ):  Eval[I, leftInj[L ⊕ R], O] =
-    new Eval[I, leftInj[L ⊕ R], O] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := outBip.leftInj(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // R → L ⊕ R
-    implicit final def eval_rightInj[
-      L <: AnyGraphObject, R <: AnyGraphObject,
-      OL, OR, O
-    ](implicit
-      outBip: BiproductImpl[O, OL, OR]
-    ):  Eval[OR, rightInj[L ⊕ R], O] =
-    new Eval[OR, rightInj[L ⊕ R], O] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := outBip.rightInj(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // L ⊕ R → L
-    implicit final def eval_leftProj[
-      IL, IR, I,
-      L <: AnyGraphObject, R <: AnyGraphObject
-    ](implicit
-      outBip: BiproductImpl[I, IL, IR]
-    ):  Eval[I, leftProj[L ⊕ R], IL] =
-    new Eval[I, leftProj[L ⊕ R], IL] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := outBip.leftProj(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // L ⊕ R → R
-    implicit final def eval_rightProj[
-      IL, IR, I,
-      L <: AnyGraphObject, R <: AnyGraphObject
-    ](implicit
-      outBip: BiproductImpl[I, IL, IR]
-    ):  Eval[I, rightProj[L ⊕ R], IR] =
-    new Eval[I, rightProj[L ⊕ R], IR] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := outBip.rightProj(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-*/
-
-/*
-    // 0 → X
-    implicit final def eval_fromZero[
-      T <: AnyTitanType, X <: AnyGraphObject
-    ](implicit
-      z: ZeroFor[T]
-    ):  Eval[T, fromZero[X], T] =
-    new Eval[T, fromZero[X], T] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := z.zero
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    // X → 0 (exactly the same)
-    implicit final def eval_toZero[
-      T <: AnyTitanType, X <: AnyGraphObject
-    ](implicit
-      z: ZeroFor[T]
-    ):  Eval[T, toZero[X], T] =
-    new Eval[T, toZero[X], T] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := z.zero
       }
 
       def present(morph: InMorph): String = morph.label

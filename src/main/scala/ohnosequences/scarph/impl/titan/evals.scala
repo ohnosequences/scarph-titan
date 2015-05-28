@@ -171,6 +171,24 @@ case object evals {
     }
 
   }
+
+  case class vertexPropertyStructure[V](val graph: titan.TitanGraph) extends AnyPropertyStructure {
+
+    type RawObject = AnyTitanType
+    type RawElement = TitanVertices
+    type RawValue = Container[V]
+    type PropertyBound = AnyProperty.withRaw[V] { type Owner <: AnyVertex }
+
+    def getRaw[P <: PropertyBound](p: P)(e: RawElement): RawValue =
+      e map { _.getProperty[V](p.label) }
+
+    def lookupRaw[P <: PropertyBound](p: P)(v: RawValue): RawElement =
+      v flatMap { x =>
+        graph.query.has(p.label, x)
+          .vertices.asTitanVertices
+      }
+  }
+
 /*
   trait DefaultTitanEvals extends TitanRewriteRules {}
 
@@ -205,52 +223,6 @@ case object evals {
 */
 
 /*
-    // X → X ⊕ X
-    implicit final def eval_fork[
-      I, T <: AnyGraphObject, O
-    ](implicit
-      outBip: BiproductImpl[O, I, I]
-    ):  Eval[I, fork[T], O] =
-    new Eval[I, fork[T], O] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := outBip(input.value, input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-*/
-
-/*
-    implicit final def eval_get[
-      P <: AnyProperty, RawElem, RawValue
-    ](implicit
-      propImpl: PropertyImpl[P, RawElem, RawValue]
-    ):  Eval[RawElem, get[P], RawValue] =
-    new Eval[RawElem, get[P], RawValue] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := propImpl.get(input.value, morph.property)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def eval_lookup[
-      P <: AnyProperty, RawElem, RawValue
-    ](implicit
-      propImpl: PropertyImpl[P, RawElem, RawValue]
-    ):  Eval[RawValue, lookup[P], RawElem] =
-    new Eval[RawValue, lookup[P], RawElem] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := propImpl.lookup(input.value, morph.property)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-
     implicit final def eval_quantify[
       P <: AnyPredicate, RawPred, RawElem
     ](implicit

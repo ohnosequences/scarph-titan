@@ -17,6 +17,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   val tstr = ohnosequences.scarph.impl.titan.evals.tensorStructure(null: titan.TitanGraph); import tstr._
   import ohnosequences.scarph.impl.titan.evals.graphStructure._
   import ohnosequences.scarph.impl.titan.evals.biproductStructure._
+  val vstr = ohnosequences.scarph.impl.titan.evals.vertexPropertyStructure[String](null: titan.TitanGraph); import vstr._
 
   test("eval basic queries over sample twitter graph") {
 
@@ -56,11 +57,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     assert(query1 == query2)
 
+    val query3 = lookup(user.name) >=> get(user.name)
+
     println("\n----------------")
     println("rewritten query:")
     // println(rewrite(query2).label)
 
-    println(evalOn[TitanVertices](query2).evalPlan)
+    println(evalOn[Container[String]](query3).evalPlan)
 
     //lazy val z = evaluate(query) on (
     //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")

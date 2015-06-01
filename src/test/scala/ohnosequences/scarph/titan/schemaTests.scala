@@ -13,11 +13,12 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
   // object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
   // import titanTwitterEvals._
-  import ohnosequences.scarph.impl.titan.evals.categoryStructure._
-  val tstr = ohnosequences.scarph.impl.titan.evals.tensorStructure(null: titan.TitanGraph); import tstr._
-  import ohnosequences.scarph.impl.titan.evals.graphStructure._
-  import ohnosequences.scarph.impl.titan.evals.biproductStructure._
-  val vstr = ohnosequences.scarph.impl.titan.evals.vertexPropertyStructure[String](null: titan.TitanGraph); import vstr._
+  val impl = ohnosequences.scarph.impl.titan.titan.all(null: titan.TitanGraph); import impl._
+  // import ohnosequences.scarph.impl.titan.evals.categoryStructure._
+  // val tstr = ohnosequences.scarph.impl.titan.evals.tensorStructure(null: titan.TitanGraph); import tstr._
+  // import ohnosequences.scarph.impl.titan.evals.graphStructure._
+  // import ohnosequences.scarph.impl.titan.evals.biproductStructure._
+  // val vstr = ohnosequences.scarph.impl.titan.evals.vertexPropertyStructure[Integer](null: titan.TitanGraph); import vstr._
 
   test("eval basic queries over sample twitter graph") {
 
@@ -42,28 +43,30 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       //.get(posted.time)
 
     val query1 =
+      lookup(user.name) >=>
       inV(follows) >=>
       fork(user) >=>
       (outV(follows) ⊕ inV(follows)) >=>
       (outV(posted) ⊕ outV(posted)) >=>
-      merge(tweet)
+      merge(tweet) >=>
+      get(tweet.text)
 
     val query2 =
-      inV(follows)
+      lookup(user.name)
+      .inV(follows)
       .fork
       .andThen(outV(follows) ⊕ inV(follows))
       .andThen(outV(posted) ⊕ outV(posted))
       .merge
+      .get(tweet.text)
 
     assert(query1 == query2)
-
-    val query3 = lookup(user.name) >=> get(user.name)
 
     println("\n----------------")
     println("rewritten query:")
     // println(rewrite(query2).label)
 
-    println(evalOn[Container[String]](query3).evalPlan)
+    println(evalOn[Container[String]](query2).evalPlan)
 
     //lazy val z = evaluate(query) on (
     //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")

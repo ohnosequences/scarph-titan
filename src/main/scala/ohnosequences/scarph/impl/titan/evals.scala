@@ -2,79 +2,23 @@ package ohnosequences.scarph.impl.titan
 
 case object evals {
 
-  import types._, implementations._, predicates._
+  import types._, predicates._
 
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
 
   import ohnosequences.{ scarph => s }
-  import s.objects._, s.morphisms._, s.evals._, s.rewrites._
+  import s.objects._, s.morphisms._, s.evals._
 
-  import com.thinkaurelius.titan.{ core => titan }
+  import com.thinkaurelius.titan.core
   import com.tinkerpop.blueprints
   import com.tinkerpop.blueprints.Direction
 
 
-  case object categoryStructure extends CategoryStructure {
-
-    type RawObject = AnyTitanType
-  }
-
-  case class tensorStructure(val graph: titan.TitanGraph) extends TensorStructure {
-
-    type RawObject = AnyTitanType
-    type RawTensor[L <: RawObject, R <: RawObject] = Duplet[L, R]
-    type RawUnit = titan.TitanGraph
-
-    def construct[L <: RawObject, R <: RawObject](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
-    def leftProjRaw[L <: RawObject, R <: RawObject](t: RawTensor[L, R]): L = t.left
-    def rightProjRaw[L <: RawObject, R <: RawObject](t: RawTensor[L, R]): R = t.right
-    def toUnitRaw[X <: RawObject](x: X): RawUnit = graph
-
-    implicit def titanUnitToVertices:
-        FromUnit[TitanUnit, TitanVertices] =
-    new FromUnit[TitanUnit, TitanVertices] {
-
-      def fromUnit(u: U, e: AnyGraphObject): T =
-        Container(graph.query.has("label", e.label)
-          .vertices.asTitanVertices)
-    }
-
-    implicit def titanUnitToEdges:
-        FromUnit[TitanUnit, TitanEdges] =
-    new FromUnit[TitanUnit, TitanEdges] {
-
-      def fromUnit(u: U, e: AnyGraphObject): T =
-        Container(graph.query.has("label", e.label)
-          .edges.asTitanEdges)
-    }
+  trait TitanCategoryStructure extends CategoryStructure
 
 
-    implicit def containerMatch[X]:
-        Matchable[Container[X]] =
-    new Matchable[Container[X]] {
 
-      def matchUp(l: T, r: T): T =
-        Container(
-          l.values.flatMap { x =>
-            r.values.filter { _ == x }
-          }
-        )
-    }
-
-    implicit def dupletMatch[X <: AnyTitanType](implicit
-      t: Matchable[X]
-    ):  Matchable[Duplet[X, X]] =
-    new Matchable[Duplet[X, X]] {
-
-      def matchUp(l: T, r: T): T = Duplet(
-        t.matchUp(l.left, r.left),
-        t.matchUp(l.right, r.right)
-      )
-    }
-
-  }
-
-  case object graphStructure extends GraphStructure {
+  trait TitanGraphStructure extends GraphStructure {
 
     type RawEdge = TitanEdges
     type RawSource = TitanVertices
@@ -123,16 +67,80 @@ case object evals {
 
   }
 
-  case object biproductStructure extends BiproductStructure {
 
-    type RawObject = AnyTitanType
-    type RawBiproduct[L <: RawObject, R <: RawObject] = Duplet[L, R]
+
+  trait TitanGraph {
+
+    val graph: core.TitanGraph
+  }
+
+  trait TitanTensorStructure extends TensorStructure with TitanGraph {
+
+    type TensorBound = AnyTitanType
+    type RawTensor[L <: TensorBound, R <: TensorBound] = Duplet[L, R]
+    type RawUnit = core.TitanGraph
+
+    def tensorRaw[L <: TensorBound, R <: TensorBound](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
+    def leftRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): L = t.left
+    def rightRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): R = t.right
+    def toUnitRaw[X <: TensorBound](x: X): RawUnit = graph
+
+    implicit def titanUnitToVertices:
+        FromUnit[TitanUnit, TitanVertices] =
+    new FromUnit[TitanUnit, TitanVertices] {
+
+      def fromUnit(u: U, e: AnyGraphObject): T =
+        Container(graph.query.has("label", e.label)
+          .vertices.asTitanVertices)
+    }
+
+    implicit def titanUnitToEdges:
+        FromUnit[TitanUnit, TitanEdges] =
+    new FromUnit[TitanUnit, TitanEdges] {
+
+      def fromUnit(u: U, e: AnyGraphObject): T =
+        Container(graph.query.has("label", e.label)
+          .edges.asTitanEdges)
+    }
+
+
+    implicit def containerMatch[X]:
+        Matchable[Container[X]] =
+    new Matchable[Container[X]] {
+
+      def matchUp(l: T, r: T): T =
+        Container(
+          l.values.flatMap { x =>
+            r.values.filter { _ == x }
+          }
+        )
+    }
+
+    implicit def dupletMatch[X <: AnyTitanType](implicit
+      t: Matchable[X]
+    ):  Matchable[Duplet[X, X]] =
+    new Matchable[Duplet[X, X]] {
+
+      def matchUp(l: T, r: T): T = Duplet(
+        t.matchUp(l.left, r.left),
+        t.matchUp(l.right, r.right)
+      )
+    }
+
+  }
+
+
+
+  trait TitanBiproductStructure extends BiproductStructure {
+
+    type BiproductBound = AnyTitanType
+    type RawBiproduct[L <: BiproductBound, R <: BiproductBound] = Duplet[L, R]
     type RawZero = TitanZero
 
-    def construct[L <: RawObject, R <: RawObject](l: L, r: R): RawBiproduct[L, R] = Duplet(l, r)
-    def leftProjRaw[L <: RawObject, R <: RawObject](t: RawBiproduct[L, R]): L = t.left
-    def rightProjRaw[L <: RawObject, R <: RawObject](t: RawBiproduct[L, R]): R = t.right
-    def toZeroRaw[X <: RawObject](x: X): RawZero = TitanZero
+    def biproductRaw[L <: BiproductBound, R <: BiproductBound](l: L, r: R): RawBiproduct[L, R] = Duplet(l, r)
+    def leftProjRaw[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): L = t.left
+    def rightProjRaw[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): R = t.right
+    def toZeroRaw[X <: BiproductBound](x: X): RawZero = TitanZero
 
     implicit def containerZero[X]:
         ZeroFor[Container[X]] =
@@ -172,21 +180,49 @@ case object evals {
 
   }
 
-  case class vertexPropertyStructure[V](val graph: titan.TitanGraph) extends AnyPropertyStructure {
 
-    type RawObject = AnyTitanType
-    type RawElement = TitanVertices
-    type RawValue = Container[V]
-    type PropertyBound = AnyProperty.withRaw[V] { type Owner <: AnyVertex }
+  trait TitanPropertyStructure extends TitanGraph {
 
-    def getRaw[P <: PropertyBound](p: P)(e: RawElement): RawValue =
-      e map { _.getProperty[V](p.label) }
+    implicit def eval_get[E <: core.TitanElement, VT, P <: AnyProperty]:
+        Eval[Container[E], get[P], Container[VT]] =
+    new Eval[Container[E], get[P], Container[VT]] {
 
-    def lookupRaw[P <: PropertyBound](p: P)(v: RawValue): RawElement =
-      v flatMap { x =>
-        graph.query.has(p.label, x)
-          .vertices.asTitanVertices
+      def rawApply(morph: InMorph): InVal => OutVal = { elements =>
+        elements map { _.getProperty[VT](morph.property.label) }
       }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
+
+
+    implicit def eval_lookupV[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyVertex }]:
+        Eval[Container[VT], lookup[P], TitanVertices] =
+    new Eval[Container[VT], lookup[P], TitanVertices] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = { values =>
+        values flatMap { v =>
+          graph.query.has(morph.property.label, v)
+            .vertices.asTitanVertices
+        }
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
+
+    implicit def eval_lookupE[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyEdge }]:
+        Eval[Container[VT], lookup[P], TitanEdges] =
+    new Eval[Container[VT], lookup[P], TitanEdges] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = { values =>
+        values flatMap { v =>
+          graph.query.has(morph.property.label, v)
+            .edges.asTitanEdges
+        }
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
+
   }
 
 /*
@@ -257,7 +293,7 @@ case object evals {
 /*
   trait LowPriorityEvals extends DefaultEvals {
 
-    val graph: titan.TitanGraph
+    val graph: core.TitanGraph
 
 
     implicit final def eval_inE[
@@ -293,11 +329,30 @@ case object evals {
       def present(morph: InMorph): String = morph.label
     }
 
-    implicit final def predicateImpl[P <: AnyPredicate, E <: titan.TitanElement]:
+    implicit final def predicateImpl[P <: AnyPredicate, E <: core.TitanElement]:
       TitanPredicateImpl[P, E] =
       TitanPredicateImpl[P, E]()
 
   }
 */
+
+}
+
+case object titan {
+  import com.thinkaurelius.titan.core
+  import evals._
+
+  case object categoryStructure extends TitanCategoryStructure
+  case object graphStructure extends TitanGraphStructure
+  case class  tensorStructure(val graph: core.TitanGraph) extends TitanTensorStructure
+  case object biproductStructure extends TitanBiproductStructure
+  case class  propertyStructure(val graph: core.TitanGraph) extends TitanPropertyStructure
+
+  case class all(val graph: core.TitanGraph) extends
+    TitanCategoryStructure with
+    TitanGraphStructure with
+    TitanTensorStructure with
+    TitanBiproductStructure with
+    TitanPropertyStructure
 
 }

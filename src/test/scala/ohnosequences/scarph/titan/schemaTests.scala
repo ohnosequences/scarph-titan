@@ -45,6 +45,8 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val query1 =
       lookup(user.name) >=>
       inV(follows) >=>
+      quantify(user ? (user.age > 10)) >=>
+      coerce(user ? (user.age > 10)) >=>
       fork(user) >=>
       (outV(follows) ⊕ inV(follows)) >=>
       (outV(posted) ⊕ outV(posted)) >=>
@@ -54,6 +56,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val query2 =
       lookup(user.name)
       .inV(follows)
+      .filter(user ? (user.age > 10))
       .fork
       .andThen(outV(follows) ⊕ inV(follows))
       .andThen(outV(posted) ⊕ outV(posted))

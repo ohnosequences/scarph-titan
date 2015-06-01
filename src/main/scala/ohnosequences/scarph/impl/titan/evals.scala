@@ -225,12 +225,36 @@ case object evals {
 
   }
 
+  trait TitanPredicateStructure {
+
+    implicit final def eval_quantify[
+      P <: AnyPredicate, E <: core.TitanElement
+    ]:  Eval[Container[E], quantify[P], Container[E]] =
+    new Eval[Container[E], quantify[P], Container[E]] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = { elements =>
+        elements filter { evalPredicate(morph.predicate, _) }
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
+
+
+    implicit final def eval_coerce[
+      P <: AnyPredicate, E <: core.TitanElement
+    ]:  Eval[Container[E], coerce[P], Container[E]] =
+    new Eval[Container[E], coerce[P], Container[E]] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = x => x
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
+
+  }
+
+
 /*
-  trait DefaultTitanEvals extends TitanRewriteRules {}
-
-  trait TitanRewriteRules extends AnyRewriteStrategy with SpecificTitanEvals {}
-
-  trait SpecificTitanEvals extends DerivedTitanEvals {
+  trait TitanRewriteStrategy extends AnyRewriteStrategy {
 
     implicit final def eval_quantify_[I, M <: AnyGraphMorphism { type Out = P#Element }, P <: AnyPredicate](
       implicit eval_previous: Eval[I, M, TitanQueries]
@@ -256,41 +280,7 @@ case object evals {
       def present(morph: InMorph): String = morph.label
     }
   }
-*/
 
-/*
-    implicit final def eval_quantify[
-      P <: AnyPredicate, RawPred, RawElem
-    ](implicit
-      predImpl: PredicateImpl[P, RawPred, RawElem]
-    ):  Eval[RawElem, quantify[P], RawPred] =
-    new Eval[RawElem, quantify[P], RawPred] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := predImpl.quantify(input.value, morph.predicate)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-
-    implicit final def eval_coerce[
-      P <: AnyPredicate, RawPred, RawElem
-    ](implicit
-      predImpl: PredicateImpl[P, RawPred, RawElem]
-    ):  Eval[RawPred, coerce[P], RawElem] =
-    new Eval[RawPred, coerce[P], RawElem] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := predImpl.coerce(input.value)
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-    */
-
-
-/*
   trait LowPriorityEvals extends DefaultEvals {
 
     val graph: core.TitanGraph
@@ -347,12 +337,14 @@ case object titan {
   case class  tensorStructure(val graph: core.TitanGraph) extends TitanTensorStructure
   case object biproductStructure extends TitanBiproductStructure
   case class  propertyStructure(val graph: core.TitanGraph) extends TitanPropertyStructure
+  case object predicateStructure extends TitanPredicateStructure
 
   case class all(val graph: core.TitanGraph) extends
     TitanCategoryStructure with
     TitanGraphStructure with
     TitanTensorStructure with
     TitanBiproductStructure with
-    TitanPropertyStructure
+    TitanPropertyStructure with
+    TitanPredicateStructure
 
 }

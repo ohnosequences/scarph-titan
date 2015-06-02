@@ -19,22 +19,6 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     import ohnosequences.scarph.test._, twitter._
 
-    //val query = lookup(user.name)*/
-      //.outV(posted)*/
-      //.quantify(tweet ? (tweet.url =/= "foo"))
-      //.coerce
-      //.get(tweet.text)
-      //.inV(posted)*/
-      //.filter(user ? (user.name =/= "@evdokim") and (user.age > 20))*/
-      //.duplicate*/
-      //.andThen(get(user.name) ⊗ get(user.name))*/
-      //.matchUp
-      //.get(user.name)
-      //.inE(posted)
-      //.quantify(posted ? (posted.time =/= ""))
-      //.coerce
-      //.get(posted.time)
-
     val query1 =
       lookup(user.name) >=>
       inV(follows) >=>

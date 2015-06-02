@@ -15,8 +15,8 @@ libraryDependencies ++= Seq(
 //    case _ => "com.chuusai"  % "shapeless" % "2.0.0" cross CrossVersion.full
 //  },
   "ohnosequences"           %% "cosas"            % "0.6.0",
-  "ohnosequences"           %% "scarph"           % "0.5.0.new-syntax-SNAPSHOT",
-  "ohnosequences"           %% "scarph"           % "0.5.0.new-syntax-SNAPSHOT" % Test classifier "tests",
+  "ohnosequences"           %% "scarph"           % "0.5.0.structures-SNAPSHOT",
+  "ohnosequences"           %% "scarph"           % "0.5.0.structures-SNAPSHOT" % Test classifier "tests",
   "com.thinkaurelius.titan" %  "titan-core"       % "0.5.4",
   "com.thinkaurelius.titan" %  "titan-berkeleyje" % "0.5.4",
   "org.scalatest"           %% "scalatest"        % "2.2.4" % Test,

@@ -5,70 +5,64 @@ import com.thinkaurelius.titan.{ core => titan }
 //import scala.reflect.runtime.universe._*/
 
 
-object schemaTests {
-
-  // import ohnosequences.scarph.test._
-
-  case object uh extends ValueOfType[String]("uh")
-  case object ah extends Vertex("hola!") {
-    case object name extends Property(ah -> uh)("argh")
-    case object aaaa extends Property(ah -> uh)("aaaa")
-    case object bbbb extends Property(ah -> uh)("bbbb")
-  }
-}
-
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
-  import ohnosequences.scarph._, evals._, morphisms._
+  import ohnosequences.scarph._, evals._, morphisms._, rewrites._
   import syntax.objects._, syntax.morphisms._
   import ohnosequences.scarph.impl.titan.evals._
+  import ohnosequences.scarph.impl.titan.types._
+  import ohnosequences.scarph.impl.titan.rewrites._
 
-  object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
-  import titanTwitterEvals._
+  val impl = ohnosequences.scarph.impl.titan.evals.all(null: titan.TitanGraph); import impl._
 
   test("eval basic queries over sample twitter graph") {
 
     import ohnosequences.scarph.test._, twitter._
-    import ohnosequences.scarph.impl.titan.implementations._
-    import ohnosequences.scarph.impl.titan.types._
 
-    val query = lookup(user.name)
-      //.outV(posted)
-      //.quantify(tweet ? (tweet.url =/= "foo"))
-      //.coerce
-      //.get(tweet.text)
-      .inV(posted)
-      //.filter(user ? (user.name =/= "@evdokim") and (user.age > 20))*/
-      .duplicate
-      .matchUp
-      .get(user.name)
-      //.inE(posted)
-      //.quantify(posted ? (posted.time =/= ""))
-      //.coerce
-      //.get(posted.time)
-      .outV(follows)
+    val query1 =
+      lookup(user.name) >=>
+      inV(follows) >=>
+      quantify(user ? (user.age > 10)) >=>
+      coerce(user ? (user.age > 10)) >=>
+      fork(user) >=>
+      (outV(follows) ⊕ inV(follows)) >=>
+      (outV(posted) ⊕ outV(posted)) >=>
+      merge(tweet) >=>
+      get(tweet.text)
+
+    val query2 =
+      lookup(user.name)
+      .inV(follows)
+      .filter(user ? (user.age > 10))
       .fork
+      .andThen(outV(follows) ⊕ inV(follows))
+      .andThen(outV(posted) ⊕ outV(posted))
       .merge
-      .get(user.name)
+      .get(tweet.text)
 
-    implicit def toCont[T](ts: Seq[T]): Container[T] = ts
+    assert(query1 == query2)
+
+    val q =
+      id(user)
+      .outV(follows)
+      .outE(posted)
+      .quantify(posted ? (posted.time =/= ""))
 
     println("\n----------------")
     println("rewritten query:")
-    println(evaluate(rewrite(query)).evalPlan)
+    println((apply(edgeQuantification) to q).label)
 
-    lazy val z = evaluate(query) on (
-      name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
-    )
+    println(evalOn[TitanVertices](q).evalPlan)
 
-    println("\n----------------")
-    println("predicates:")
-    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForEdges.toString) }*/
-    //z.value.foreach{ p => println(p.asInstanceOf[com.thinkaurelius.titan.graphdb.query.vertex.VertexCentricQueryBuilder].describeForProperties.toString) }*/
+    //println(evalOn[Container[String]](query2).evalPlan)*/
+
+    //lazy val z = evaluate(query) on (
+    //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
+    //)
 
     println("\n----------------")
     println("results:")
-    z.value.foreach(println)
+    //z.value.foreach(println)*/
 
     println("\n----------------")
   }
@@ -78,9 +72,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import com.thinkaurelius.titan.core._
 
   val graphLocation = new File("/tmp/titanTest")
-  var g: TitanGraph = null
+  var g: titan.TitanGraph = null
 
-  override final def beforeAll() {
+  /*override final def beforeAll() {
 
     def cleanDir(f: File) {
       if (f.isDirectory) f.listFiles.foreach(cleanDir(_))
@@ -112,5 +106,5 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       g.shutdown
       println("Shutdown Titan graph")
     }
-  }
+  }*/
 }

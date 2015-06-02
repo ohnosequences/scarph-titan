@@ -10,21 +10,14 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import ohnosequences.scarph._, evals._, morphisms._, rewrites._
   import syntax.objects._, syntax.morphisms._
   import ohnosequences.scarph.impl.titan.evals._
+  import ohnosequences.scarph.impl.titan.types._
+  import ohnosequences.scarph.impl.titan.rewrites._
 
-  // object titanTwitterEvals extends DefaultTitanEvals { val graph = g }
-  // import titanTwitterEvals._
-  val impl = ohnosequences.scarph.impl.titan.titan.all(null: titan.TitanGraph); import impl._
-  // import ohnosequences.scarph.impl.titan.evals.categoryStructure._
-  // val tstr = ohnosequences.scarph.impl.titan.evals.tensorStructure(null: titan.TitanGraph); import tstr._
-  // import ohnosequences.scarph.impl.titan.evals.graphStructure._
-  // import ohnosequences.scarph.impl.titan.evals.biproductStructure._
-  // val vstr = ohnosequences.scarph.impl.titan.evals.vertexPropertyStructure[Integer](null: titan.TitanGraph); import vstr._
+  val impl = ohnosequences.scarph.impl.titan.evals.all(null: titan.TitanGraph); import impl._
 
   test("eval basic queries over sample twitter graph") {
 
     import ohnosequences.scarph.test._, twitter._
-    import ohnosequences.scarph.impl.titan.implementations._
-    import ohnosequences.scarph.impl.titan.types._
 
     //val query = lookup(user.name)*/
       //.outV(posted)*/
@@ -65,11 +58,17 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     assert(query1 == query2)
 
+    val q =
+      outE(posted)
+      .quantify(posted ? (posted.time =/= ""))
+
     println("\n----------------")
     println("rewritten query:")
-    // println(rewrite(query2).label)
+    println((apply(edgeQuantification) to q).label)
 
-    println(evalOn[Container[String]](query2).evalPlan)
+    println(evalOn[TitanVertices](q).evalPlan)
+
+    //println(evalOn[Container[String]](query2).evalPlan)*/
 
     //lazy val z = evaluate(query) on (
     //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")

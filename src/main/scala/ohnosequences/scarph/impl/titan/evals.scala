@@ -252,85 +252,30 @@ case object evals {
 
   }
 
+  trait TitanAfterRewriteEvals {
+    import morphisms._
 
-/*
-  trait TitanRewriteStrategy extends AnyRewriteStrategy {
-
-    implicit final def eval_quantify_[I, M <: AnyGraphMorphism { type Out = P#Element }, P <: AnyPredicate](
-      implicit eval_previous: Eval[I, M, TitanQueries]
-    ):  Eval[I, M >=> quantify[P], TitanQueries] =
-    new Eval[I, M >=> quantify[P], TitanQueries] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := eval_previous(morph.first)(input).value.map{ addConditions(morph.second.predicate, _) }
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def eval_coerce_Edges[
+    implicit final def eval_quantifyOutE[
       P <: AnyPredicate { type Element <: AnyEdge }
-    ]:  Eval[TitanQueries, coerce[P], TitanEdges] =
-    new Eval[TitanQueries, coerce[P], TitanEdges] {
+    ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
+    new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
 
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        (morph.out: InMorph#Out) := input.value.flatMap{ _.edges.asTitanEdges }
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-  }
-
-  trait LowPriorityEvals extends DefaultEvals {
-
-    val graph: core.TitanGraph
-
-
-    implicit final def eval_inE[
-      E <: AnyEdge
-    ]:  Eval[TitanVertices, inE[E], TitanQueries] =
-    new Eval[TitanVertices, inE[E], TitanQueries] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := (input.value map {
-          _.query
+      def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
+        vertices flatMap { v =>
+          addConditions(morph.predicate,
+            v.query
             .labels(morph.edge.label)
             .direction(Direction.IN)
-        })
+          )
+          .edges.asTitanEdges
+        }
       }
 
-      def present(morph: InMorph): String = morph.label
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
     }
-
-
-    implicit final def eval_outE[
-      E <: AnyEdge
-    ]:  Eval[TitanVertices, outE[E], TitanQueries] =
-    new Eval[TitanVertices, outE[E], TitanQueries] {
-
-      def apply(morph: InMorph): OutMorph = { input: Input =>
-        morph.out := (input.value map {
-          _.query
-            .labels(morph.edge.label)
-            .direction(Direction.OUT)
-        })
-      }
-
-      def present(morph: InMorph): String = morph.label
-    }
-
-    implicit final def predicateImpl[P <: AnyPredicate, E <: core.TitanElement]:
-      TitanPredicateImpl[P, E] =
-      TitanPredicateImpl[P, E]()
 
   }
-*/
 
-}
-
-case object titan {
-  import com.thinkaurelius.titan.core
-  import evals._
 
   case object categoryStructure extends TitanCategoryStructure
   case object graphStructure extends TitanGraphStructure
@@ -345,6 +290,7 @@ case object titan {
     TitanTensorStructure with
     TitanBiproductStructure with
     TitanPropertyStructure with
-    TitanPredicateStructure
+    TitanPredicateStructure with
+    TitanAfterRewriteEvals
 
 }

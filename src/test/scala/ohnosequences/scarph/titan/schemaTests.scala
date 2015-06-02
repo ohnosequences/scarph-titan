@@ -59,7 +59,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     assert(query1 == query2)
 
     val q =
-      outE(posted)
+      id(user)
+      .outV(follows)
+      .outE(posted)
       .quantify(posted ? (posted.time =/= ""))
 
     println("\n----------------")

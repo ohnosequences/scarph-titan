@@ -26,4 +26,24 @@ object morphisms {
     lazy val label: String = s"quantifyOutE(${predicate.label})"
   }
 
+  case class quantifyInE[P <: AnyPredicate { type Element <: AnyEdge }]
+    (val predicate: P) extends AnyGraphMorphism {
+
+    type Predicate = P
+
+    type Edge = Predicate#Element
+    val  edge = predicate.element
+
+    type     In = Edge#TargetVertex
+    lazy val in = edge.targetVertex
+
+    type     Out = Predicate
+    lazy val out = predicate
+
+    type     Dagger = target[Edge]
+    lazy val dagger = target(edge): Dagger
+
+    lazy val label: String = s"quantifyInE(${predicate.label})"
+  }
+
 }

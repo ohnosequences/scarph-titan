@@ -142,20 +142,11 @@ case object evals {
     def rightProjRaw[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): R = t.right
     def toZeroRaw[X <: BiproductBound](x: X): RawZero = TitanZero
 
-    implicit def containerZero[X]:
-        ZeroFor[Container[X]] =
-    new ZeroFor[Container[X]] {
+    implicit def containerZero[O <: AnyGraphObject, X]:
+        ZeroFor[O, Container[X]] =
+    new ZeroFor[O, Container[X]] {
 
-      def zero(o: AnyGraphObject): T = Container[X](Seq())
-    }
-
-    implicit def dupletZero[L <: AnyTitanType, R <: AnyTitanType](implicit
-      l: ZeroFor[L],
-      r: ZeroFor[R]
-    ):  ZeroFor[Duplet[L, R]] =
-    new ZeroFor[Duplet[L, R]] {
-
-      def zero(o: AnyGraphObject): T = Duplet[L, R](l.zero(o), r.zero(o))
+      def zero(o: Obj): T = Container[X](Seq())
     }
 
 

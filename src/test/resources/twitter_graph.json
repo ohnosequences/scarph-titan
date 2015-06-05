@@ -10,6 +10,10 @@
         "type": "integer",
         "value": 95
       },
+      "type": {
+        "type": "string",
+        "value": "user"
+      },
       "_id": 256,
       "_type": "vertex"
     },
@@ -17,6 +21,10 @@
       "name": {
         "type": "string",
         "value": "@laughedelic"
+      },
+      "type": {
+        "type": "string",
+        "value": "user"
       },
       "age": {
         "type": "integer",
@@ -30,6 +38,10 @@
         "type": "string",
         "value": "@evdokim"
       },
+      "type": {
+        "type": "string",
+        "value": "user"
+      },
       "age": {
         "type": "integer",
         "value": 22
@@ -38,6 +50,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "#programming languages should be explicit (= code) about what they are and their needs: syntax, underlying platform, semantics"
@@ -46,6 +62,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "type definitions in titan #graphdb https://github.com/thinkaurelius/titan/wiki/Type-Definition-Overview … killer feature! example of how type info can be used to get better performance"
@@ -54,6 +74,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "just read \"Categories for synchrony and asynchrony\" http://bit.ly/15sBf22  nice paper with conditions for completeness of Kleisli cats"
@@ -62,6 +86,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "back to twitter :)"
@@ -70,6 +98,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "Spend the whole night trying to build Idris from sources. I lost any hope. Cabal is hell \"("
@@ -78,6 +110,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "What I don’t like about going to bed at 8am is that the next morning there are no interesting news/notifications anywhere \"/ boring morning"
@@ -86,6 +122,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "больше недели искал нормальную jQuery-библиотеку для галереи - в итоге написал свою"
@@ -94,6 +134,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "java.util.concurrent вообще круть!)))"
@@ -102,6 +146,10 @@
       "_type": "vertex"
     },
     {
+      "type": {
+        "type": "string",
+        "value": "tweet"
+      },
       "text": {
         "type": "string",
         "value": "в раю все ездят на фиксах и смотрят арт-хаус @ ЛХ"

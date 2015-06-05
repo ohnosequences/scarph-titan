@@ -8,7 +8,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import ohnosequences.{ scarph => s }
   import s.objects._, s.evals._, s.morphisms._
   import s.syntax.objects._, s.syntax.morphisms._
-  import s.test._, twitter._
+  import s.test.twitter._, s.test.queries, s.test.asserts._
 
   import ohnosequences.scarph.impl.{ titan => t }
   import t.evals._, t.types._, t.rewrites._, t.syntax._
@@ -55,15 +55,53 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
   //val impl = ohnosequences.scarph.impl.titan.evals.all(twitterGraph); import impl._*/
 
-  val nouser = user := Container[core.TitanVertex](Seq())
+  case object testSamples {
+    import ohnosequences.cosas.types._
+
+    val nousers = user := Container[core.TitanVertex](Seq())
+
+    def vertices[V <: AnyVertex](v: V): V := TitanVertices =
+      v := Container(twitterGraph.query.has("type", v.label).vertices.asTitanVertices: Iterable[core.TitanVertex])
+
+    def edges[E <: AnyEdge](e: E): E := TitanEdges =
+      e := Container(twitterGraph.query.has("label", e.label).edges.asTitanEdges)
+
+    val users = vertices(user)
+    val tweets = vertices(tweet)
+    val postEdges = edges(posted)
+
+    val names = name := Container[String](Seq("@eparejatobes", "@laughedelic", "@evdokim"))
+    val ages = age := Container[Integer](Seq(95, 5, 22))
+
+    val usrs = users.value.values.toList
+    val edu = usrs(0)
+    val alexey = usrs(1)
+    val kim = usrs(2)
+  }
+  import testSamples._
 
   test("checking evals for the basic structure") {
     import t.evals.categoryStructure._
     import queries.categoryStructure._
 
-    assert{ eval(q_id)(nouser) == nouser }
-    assert{ eval(q_comp1)(nouser) == nouser }
-    assert{ eval(q_comp2)(nouser) == nouser }
+    assertTaggedEq( eval(q_id)(users), users )
+    assertTaggedEq( eval(q_comp1)(users), users )
+    assertTaggedEq( eval(q_comp2)(users), users )
+  }
+
+  test("checking evals for the property structure") {
+    import t.evals.categoryStructure._
+    val ps = t.evals.propertyStructure(twitterGraph); import ps._
+    import queries.propertyStructure._
+
+    assertTaggedEq( eval(q_getV)(users), ages )
+    // FIXME: Container(List()) vs. Container(Wrappers())
+    //assertTaggedEq( eval(q_lookupV)(names), users )*/
+    //assertTaggedEq( eval(q_compV)(names), ages )*/
+
+    //assertTaggedEq( eval(q_getE)(dp), dtimes )*/
+    //assertTaggedEq( eval(q_lookupE)(dtimes), dp )*/
+    //assertTaggedEq( eval(q_compE)(dp), dp )*/
   }
 
   test("checking evals for the tensor structure") {
@@ -71,23 +109,26 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val ts = t.evals.tensorStructure(twitterGraph); import ts._
     import queries.tensorStructure._
 
-    assert{ eval(q_tensor)(nouser ⊗ nouser ⊗ nouser) == nouser ⊗ nouser ⊗ nouser }
-    assert{ eval(q_dupl)(nouser ⊗ nouser) == nouser ⊗ nouser ⊗ nouser }
-    assert{ eval(q_match)(nouser ⊗ nouser) == nouser }
-    assert{ eval(q_comp)(nouser ⊗ nouser) == nouser }
+    assertTaggedEq( eval(q_tensor)(users ⊗ users ⊗ users), users ⊗ users ⊗ users )
+    assertTaggedEq( eval(q_dupl)(users ⊗ users), users ⊗ users ⊗ users )
+    // FIXME: Container(List()) vs. Container(Wrappers())
+    //assertTaggedEq( eval(q_match)(users ⊗ users), users )*/
+    //assertTaggedEq( eval(q_comp)(users ⊗ users), users )*/
   }
 
-/*
   test("checking evals for the biproduct structure") {
     import t.evals.categoryStructure._
     import t.evals.biproductStructure._
     import queries.biproductStructure._
 
-    assert{ eval(q_inj)(dt) == du ⊕ du ⊕ dt }
-    assert{ eval(q_bip)(du ⊕ du ⊕ dt) == du ⊕ du ⊕ dt }
-    assert{ eval(q_fork)(du ⊕ dt) == du ⊕ du ⊕ dt }
-    assert{ eval(q_merge)(du ⊕ du) == du }
-    assert{ eval(q_comp)(du ⊕ dt) == dt }
+    assertTaggedEq( eval(q_inj)(tweets), nousers ⊕ nousers ⊕ tweets )
+    assertTaggedEq( eval(q_bip)(users ⊕ users ⊕ tweets), users ⊕ users ⊕ tweets )
+    assertTaggedEq( eval(q_fork)(users ⊕ tweets), users ⊕ users ⊕ tweets )
+    assertTaggedEq( eval(q_merge)(users ⊕ users),
+      user := Container[core.TitanVertex](users.value.values ++ users.value.values)
+    )
+    // FIXME: Container(List()) vs. Container(Wrappers())
+    //assertTaggedEq( eval(q_comp)(users ⊕ tweets), tweets )*/
   }
 
   test("checking evals for the graph structure") {
@@ -95,29 +136,31 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.graphStructure._
     import queries.graphStructure._
 
-    assert{ eval(q_outV)(du) == dt }
-    assert{ eval(q_inV)(dt) == du }
-    assert{ eval(q_compV)(du) == du }
+    val repeated = user := Container[core.TitanVertex](
+      Seq(edu, edu, edu, edu, alexey, alexey, kim, kim, kim)
+    )
 
-    assert{ eval(q_outE)(du) == dt }
-    assert{ eval(q_inE)(dt) == du }
-    assert{ eval(q_compE)(du) == du }
+    // FIXME: Container(List()) vs. Container(Wrappers())
+    //assertTaggedEq( eval(q_outV)(users), tweets )*/
+    assertTaggedEq( eval(q_inV)(tweets), repeated )
+    assertTaggedEq( eval(q_compV)(users), repeated )
+
+    // FIXME: Container(List()) vs. Container(Wrappers())
+    //assertTaggedEq( eval(q_outE)(users), tweets )*/
+    assertTaggedEq( eval(q_inE)(tweets), repeated )
+    assertTaggedEq( eval(q_compE)(users), repeated )
   }
 
-  test("checking evals for the property structure") {
+  test("checking evals for the predicate structure") {
     import t.evals.categoryStructure._
-    import t.evals.propertyStructure._
-    import queries.propertyStructure._
+    import t.evals.predicateStructure._
+    import queries.predicateStructure._
 
-    // FIXME: this works if you put dnames on the right (no tag/type parameter check)
-    assert{ eval(q_getV)(du) == dages }
-    assert{ eval(q_lookupV)(dnames) == du }
-    assert{ eval(q_compV)(dnames) == dages }
+    val filtered = Container[core.TitanVertex](Seq(edu, kim))
 
-    assert{ eval(q_getE)(dp) == dtimes }
-    assert{ eval(q_lookupE)(dtimes) == dp }
-    assert{ eval(q_compE)(dp) == dp }
+    assertTaggedEq( eval(q_quant)(users), pred := filtered )
+    assertTaggedEq( eval(q_coerce)(pred := filtered), user := filtered )
+    assertTaggedEq( eval(q_comp)(users), user := filtered )
   }
-*/
 
 }

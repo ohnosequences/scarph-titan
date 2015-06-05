@@ -142,12 +142,21 @@ case object evals {
     def rightProjRaw[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): R = t.right
     def toZeroRaw[X <: BiproductBound](x: X): RawZero = TitanZero
 
-    implicit def containerZero[O <: AnyGraphObject, X]:
-        ZeroFor[O, Container[X]] =
-    new ZeroFor[O, Container[X]] {
+    implicit def verticesZero[V <: AnyVertex]:
+        ZeroFor[V, TitanVertices] =
+    new ZeroFor[V, TitanVertices] { def zero(o: Obj): T = Container[core.TitanVertex](Seq()) }
 
-      def zero(o: Obj): T = Container[X](Seq())
-    }
+    implicit def edgesZero[E <: AnyEdge]:
+        ZeroFor[E, TitanEdges] =
+    new ZeroFor[E, TitanEdges] { def zero(o: Obj): T = Container[core.TitanEdge](Seq()) }
+
+    implicit def valuesZero[VT <: AnyValueType]:
+        ZeroFor[VT, Container[VT#Raw]] =
+    new ZeroFor[VT, Container[VT#Raw]] { def zero(o: Obj): T = Container[VT#Raw](Seq()) }
+
+    implicit def predicatesZero[P <: AnyPredicate, E](implicit elem: ZeroFor[P#Element, E]):
+        ZeroFor[P, E] =
+    new ZeroFor[P, E] { def zero(o: Obj): T = elem.zero(o.element) }
 
 
     implicit def containerMerge[X]:
@@ -174,12 +183,12 @@ case object evals {
 
   trait TitanPropertyStructure extends TitanGraph {
 
-    implicit def eval_get[E <: core.TitanElement, VT, P <: AnyProperty]:
-        Eval[Container[E], get[P], Container[VT]] =
-    new Eval[Container[E], get[P], Container[VT]] {
+    implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
+        Eval[Container[E], get[P], Container[P#Value#Raw]] =
+    new Eval[Container[E], get[P], Container[P#Value#Raw]] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { elements =>
-        elements map { _.getProperty[VT](morph.property.label) }
+        elements map { _.getProperty[P#Value#Raw](morph.property.label) }
       }
 
       def present(morph: InMorph): Seq[String] = Seq(morph.label)

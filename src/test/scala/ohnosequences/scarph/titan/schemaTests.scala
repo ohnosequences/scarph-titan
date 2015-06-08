@@ -58,7 +58,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   case object testSamples {
     import ohnosequences.cosas.types._
 
-    val nousers = user := Container[core.TitanVertex](Seq())
+    val nousers = user := Container[core.TitanVertex](Iterable())
 
     def vertices[V <: AnyVertex](v: V): V := TitanVertices =
       v := Container(twitterGraph.query.has("type", v.label).vertices.asTitanVertices: Iterable[core.TitanVertex])
@@ -70,7 +70,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val tweets = vertices(tweet)
     val postEdges = edges(posted)
 
-    val names = name := Container[String](Seq("@eparejatobes", "@laughedelic", "@evdokim"))
+    val names = name := Container[String](Iterable("@eparejatobes", "@laughedelic", "@evdokim"))
     val ages = age := Container[Integer](Seq(95, 5, 22))
 
     val usrs = users.value.values.toList
@@ -96,7 +96,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     assertTaggedEq( eval(q_getV)(users), ages )
     // FIXME: Container(List()) vs. Container(Wrappers())
-    //assertTaggedEq( eval(q_lookupV)(names), users )*/
+    assertTaggedEq( eval(q_lookupV)(names), users )
     //assertTaggedEq( eval(q_compV)(names), ages )*/
 
     //assertTaggedEq( eval(q_getE)(dp), dtimes )*/

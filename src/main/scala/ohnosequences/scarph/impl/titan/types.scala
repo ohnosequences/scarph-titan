@@ -34,8 +34,8 @@ case object types {
     type Values = Iterable[Inside]
     val  values: Values
 
-    def map[T](f: Inside => T): Container[T] = Container(values.map(f))
-    def flatMap[T](f: Inside => Iterable[T]): Container[T] = Container(values.flatMap(f))
+    def map[T](f: Inside => T): Container[T] = Container(values.map(f): Iterable[T])
+    def flatMap[T](f: Inside => Iterable[T]): Container[T] = Container(values.flatMap(f): Iterable[T])
     def filter(f: Inside => Boolean): Container[Inside] = Container(values.filter(f))
   }
 
@@ -53,19 +53,13 @@ case object types {
 
   /* Conversions */
 
-  implicit final def jIterableOps[T](ts: JIterable[T]): JIterableOps[T] = JIterableOps[T](ts)
-  case class JIterableOps[T](val ts: JIterable[T]) extends AnyVal {
-
-    final def asContainer: Container[T] = Container[T](ts.asScala)
-  }
-
   implicit final def blueprintsVerticesOps(es: JIterable[blueprints.Vertex]):
     BlueprintsVerticesOps =
     BlueprintsVerticesOps(es)
   case class BlueprintsVerticesOps(val es: JIterable[blueprints.Vertex]) extends AnyVal {
 
     final def asTitanVertices: Iterable[titan.TitanVertex] =
-      es.asInstanceOf[JIterable[titan.TitanVertex]].asScala //.asContainer
+      es.asScala map { x => x.asInstanceOf[titan.TitanVertex] } //.asContainer
   }
 
   implicit final def blueprintsEdgesOps(es: JIterable[blueprints.Edge]):

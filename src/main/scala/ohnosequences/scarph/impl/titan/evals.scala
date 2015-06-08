@@ -144,15 +144,15 @@ case object evals {
 
     implicit def verticesZero[V <: AnyVertex]:
         ZeroFor[V, TitanVertices] =
-    new ZeroFor[V, TitanVertices] { def zero(o: Obj): T = Container[core.TitanVertex](Seq()) }
+    new ZeroFor[V, TitanVertices] { def zero(o: Obj): T = Container[core.TitanVertex](Iterable()) }
 
     implicit def edgesZero[E <: AnyEdge]:
         ZeroFor[E, TitanEdges] =
-    new ZeroFor[E, TitanEdges] { def zero(o: Obj): T = Container[core.TitanEdge](Seq()) }
+    new ZeroFor[E, TitanEdges] { def zero(o: Obj): T = Container[core.TitanEdge](Iterable()) }
 
     implicit def valuesZero[VT <: AnyValueType]:
         ZeroFor[VT, Container[VT#Raw]] =
-    new ZeroFor[VT, Container[VT#Raw]] { def zero(o: Obj): T = Container[VT#Raw](Seq()) }
+    new ZeroFor[VT, Container[VT#Raw]] { def zero(o: Obj): T = Container[VT#Raw](Iterable()) }
 
     implicit def predicatesZero[P <: AnyPredicate, E](implicit elem: ZeroFor[P#Element, E]):
         ZeroFor[P, E] =

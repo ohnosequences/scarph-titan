@@ -1,110 +1,165 @@
 package ohnosequences.scarph.impl.titan.test
 
-import ohnosequences.scarph._, objects._
-import com.thinkaurelius.titan.{ core => titan }
-//import scala.reflect.runtime.universe._*/
+import com.thinkaurelius.titan.core
 
 
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
-  import ohnosequences.scarph._, evals._, morphisms._, rewrites._
-  import syntax.objects._, syntax.morphisms._
-  import ohnosequences.scarph.impl.titan.evals._
-  import ohnosequences.scarph.impl.titan.types._
-  import ohnosequences.scarph.impl.titan.rewrites._
+  import ohnosequences.{ scarph => s }
+  import s.objects._, s.evals._, s.morphisms._
+  import s.syntax.objects._, s.syntax.morphisms._
+  import s.test.twitter._, s.test.queries, s.test.asserts._
 
-  val impl = ohnosequences.scarph.impl.titan.evals.all(null: titan.TitanGraph); import impl._
-
-  test("eval basic queries over sample twitter graph") {
-
-    import ohnosequences.scarph.test._, twitter._
-
-    val query1 =
-      lookup(user.name) >=>
-      inV(follows) >=>
-      quantify(user ? (user.age > 10)) >=>
-      coerce(user ? (user.age > 10)) >=>
-      fork(user) >=>
-      (outV(follows) ⊕ inV(follows)) >=>
-      (outV(posted) ⊕ outV(posted)) >=>
-      merge(tweet) >=>
-      get(tweet.text)
-
-    val query2 =
-      lookup(user.name)
-      .inV(follows)
-      .filter(user ? (user.age > 10))
-      .fork
-      .andThen(outV(follows) ⊕ inV(follows))
-      .andThen(outV(posted) ⊕ outV(posted))
-      .merge
-      .get(tweet.text)
-
-    assert(query1 == query2)
-
-    val q =
-      id(user)
-      .outV(follows)
-      .outE(posted)
-      .quantify(posted ? (posted.time =/= ""))
-
-    println("\n----------------")
-    println("rewritten query:")
-    println((apply(edgeQuantification) to q).label)
-
-    println(evalOn[TitanVertices](q).evalPlan)
-
-    //println(evalOn[Container[String]](query2).evalPlan)*/
-
-    //lazy val z = evaluate(query) on (
-    //  name := Seq("@laughedelic", "@eparejatobes", "@evdokim")
-    //)
-
-    println("\n----------------")
-    println("results:")
-    //z.value.foreach(println)*/
-
-    println("\n----------------")
-  }
-
+  import ohnosequences.scarph.impl.{ titan => t }
+  import t.evals._, t.types._, t.rewrites._, t.syntax._
 
   import java.io.File
-  import com.thinkaurelius.titan.core._
 
-  val graphLocation = new File("/tmp/titanTest")
-  var g: titan.TitanGraph = null
+  // val graphLocation = new File("/tmp/titanTest")
+  // var twitterGraph: titan.TitanGraph = null
+  val twitterGraph = core.TitanFactory.open("inmemory")
 
-  /*override final def beforeAll() {
+  override final def beforeAll() {
 
+    /*
     def cleanDir(f: File) {
       if (f.isDirectory) f.listFiles.foreach(cleanDir(_))
       else { println(f.toString); f.delete }
     }
     cleanDir(graphLocation)
-    g = TitanFactory.open("berkeleyje:" + graphLocation.getAbsolutePath)
+    */
+
+    // twitterGraph = TitanFactory.open("berkeleyje:" + graphLocation.getAbsolutePath)
 
     println("Created Titan graph")
-
 
     import ohnosequences.scarph.impl.titan.titanSchema._
     import ohnosequences.scarph.test._
 
-    g.createSchema(twitter)
+    // twitterGraph.createSchema(twitter)
 
     import com.tinkerpop.blueprints.util.io.graphson._
-    GraphSONReader.inputGraph(g, this.getClass.getResource("/twitter_graph.json").getPath)
+    GraphSONReader.inputGraph(twitterGraph, this.getClass.getResource("/twitter_graph.json").getPath)
 
-    println("loaded sample Twitter data")
+    println("Loaded sample Twitter data")
   }
 
   override final def afterAll() {
-    if(g != null) {
-      // NOTE: uncommend if you want to add data to the GraphSON:
-      // import com.tinkerpop.blueprints.util.io.graphson._
-      // GraphSONWriter.outputGraph(g, "graph_compact.json", GraphSONMode.COMPACT)
+    // NOTE: uncommend if you want to add data to the GraphSON:
+    // import com.tinkerpop.blueprints.util.io.graphson._
+    // GraphSONWriter.outputGraph(twitterGraph, "graph_compact.json", GraphSONMode.COMPACT)
 
-      g.shutdown
-      println("Shutdown Titan graph")
-    }
-  }*/
+    twitterGraph.shutdown
+    println("Shutdown Titan graph")
+  }
+
+  case object testSamples {
+    import ohnosequences.cosas.types._
+
+    val nousers = user := Container[core.TitanVertex](Iterable())
+
+    def vertices[V <: AnyVertex](v: V): V := TitanVertices =
+      v := Container(twitterGraph.query.has("type", v.label).vertices.asTitanVertices)
+
+    def edges[E <: AnyEdge](e: E): E := TitanEdges =
+      e := Container(twitterGraph.query.has("label", e.label).edges.asTitanEdges)
+
+    val users = vertices(user)
+    val tweets = vertices(tweet)
+    val postEdges = edges(posted)
+
+    val names = name := Container[String](Iterable("@eparejatobes", "@laughedelic", "@evdokim"))
+    val ages = age := Container[Integer](Iterable(95, 5, 22))
+    val times = time := Container[String](Iterable(
+      "27.10.2013", "20.3.2013", "19.2.2013", "13.11.2012", "15.2.2014",
+      "7.2.2014", "23.2.2012", "7.7.2011", "22.6.2011"
+    ))
+
+    val usrs = users.value.values.toList
+    val edu = usrs(0)
+    val alexey = usrs(1)
+    val kim = usrs(2)
+  }
+  import testSamples._
+
+  test("checking evals for the basic structure") {
+    import t.evals.categoryStructure._
+    import queries.categoryStructure._
+
+    assertTaggedEq( eval(q_id)(users), users )
+    assertTaggedEq( eval(q_comp1)(users), users )
+    assertTaggedEq( eval(q_comp2)(users), users )
+  }
+
+  test("checking evals for the property structure") {
+    import t.evals.categoryStructure._
+    val ps = t.evals.propertyStructure(twitterGraph); import ps._
+    import queries.propertyStructure._
+
+    assertTaggedEq( eval(q_getV)(users), ages )
+    assertTaggedEq( eval(q_lookupV)(names), users )
+    assertTaggedEq( eval(q_compV)(names), ages )
+
+    assertTaggedEq( eval(q_getE)(postEdges), times )
+    assertTaggedEq( eval(q_lookupE)(times), postEdges )
+    assertTaggedEq( eval(q_compE)(postEdges), postEdges )
+  }
+
+  test("checking evals for the tensor structure") {
+    import t.evals.categoryStructure._
+    val ts = t.evals.tensorStructure(twitterGraph); import ts._
+    import queries.tensorStructure._
+
+    assertTaggedEq( eval(q_tensor)(users ⊗ users ⊗ users), users ⊗ users ⊗ users )
+    assertTaggedEq( eval(q_dupl)(users ⊗ users), users ⊗ users ⊗ users )
+    assertTaggedEq( eval(q_match)(users ⊗ users), users )
+    assertTaggedEq( eval(q_comp)(users ⊗ users), users )
+  }
+
+  test("checking evals for the biproduct structure") {
+    import t.evals.categoryStructure._
+    import t.evals.biproductStructure._
+    import queries.biproductStructure._
+
+    assertTaggedEq( eval(q_inj)(tweets), nousers ⊕ nousers ⊕ tweets )
+    assertTaggedEq( eval(q_bip)(users ⊕ users ⊕ tweets), users ⊕ users ⊕ tweets )
+    assertTaggedEq( eval(q_fork)(users ⊕ tweets), users ⊕ users ⊕ tweets )
+    assertTaggedEq( eval(q_merge)(users ⊕ users),
+      user := Container(users.value.values ++ users.value.values)
+    )
+    assertTaggedEq( eval(q_comp)(users ⊕ tweets),
+      tweet := Container(tweets.value.values ++ tweets.value.values)
+    )
+  }
+
+  test("checking evals for the graph structure") {
+    import t.evals.categoryStructure._
+    import t.evals.graphStructure._
+    import queries.graphStructure._
+
+    val repeated = user := Container[core.TitanVertex](
+      Iterable(edu, edu, edu, edu, alexey, alexey, kim, kim, kim)
+    )
+
+    assertTaggedEq( eval(q_outV)(users), tweets )
+    assertTaggedEq( eval(q_inV)(tweets), repeated )
+    assertTaggedEq( eval(q_compV)(users), repeated )
+
+    assertTaggedEq( eval(q_outE)(users), tweets )
+    assertTaggedEq( eval(q_inE)(tweets), repeated )
+    assertTaggedEq( eval(q_compE)(users), repeated )
+  }
+
+  test("checking evals for the predicate structure") {
+    import t.evals.categoryStructure._
+    import t.evals.predicateStructure._
+    import queries.predicateStructure._
+
+    val filtered = Container[core.TitanVertex](Iterable(edu, kim))
+
+    assertTaggedEq( eval(q_quant)(users), pred := filtered )
+    assertTaggedEq( eval(q_coerce)(pred := filtered), user := filtered )
+    assertTaggedEq( eval(q_comp)(users), user := filtered )
+  }
+
 }

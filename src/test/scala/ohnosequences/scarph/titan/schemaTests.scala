@@ -53,15 +53,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     println("Shutdown Titan graph")
   }
 
-  //val impl = ohnosequences.scarph.impl.titan.evals.all(twitterGraph); import impl._*/
-
   case object testSamples {
     import ohnosequences.cosas.types._
 
     val nousers = user := Container[core.TitanVertex](Iterable())
 
     def vertices[V <: AnyVertex](v: V): V := TitanVertices =
-      v := Container(twitterGraph.query.has("type", v.label).vertices.asTitanVertices: Iterable[core.TitanVertex])
+      v := Container(twitterGraph.query.has("type", v.label).vertices.asTitanVertices)
 
     def edges[E <: AnyEdge](e: E): E := TitanEdges =
       e := Container(twitterGraph.query.has("label", e.label).edges.asTitanEdges)
@@ -71,7 +69,11 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val postEdges = edges(posted)
 
     val names = name := Container[String](Iterable("@eparejatobes", "@laughedelic", "@evdokim"))
-    val ages = age := Container[Integer](Seq(95, 5, 22))
+    val ages = age := Container[Integer](Iterable(95, 5, 22))
+    val times = time := Container[String](Iterable(
+      "27.10.2013", "20.3.2013", "19.2.2013", "13.11.2012", "15.2.2014",
+      "7.2.2014", "23.2.2012", "7.7.2011", "22.6.2011"
+    ))
 
     val usrs = users.value.values.toList
     val edu = usrs(0)
@@ -95,13 +97,12 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import queries.propertyStructure._
 
     assertTaggedEq( eval(q_getV)(users), ages )
-    // FIXME: Container(List()) vs. Container(Wrappers())
     assertTaggedEq( eval(q_lookupV)(names), users )
-    //assertTaggedEq( eval(q_compV)(names), ages )*/
+    assertTaggedEq( eval(q_compV)(names), ages )
 
-    //assertTaggedEq( eval(q_getE)(dp), dtimes )*/
-    //assertTaggedEq( eval(q_lookupE)(dtimes), dp )*/
-    //assertTaggedEq( eval(q_compE)(dp), dp )*/
+    assertTaggedEq( eval(q_getE)(postEdges), times )
+    assertTaggedEq( eval(q_lookupE)(times), postEdges )
+    assertTaggedEq( eval(q_compE)(postEdges), postEdges )
   }
 
   test("checking evals for the tensor structure") {
@@ -111,9 +112,8 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     assertTaggedEq( eval(q_tensor)(users ⊗ users ⊗ users), users ⊗ users ⊗ users )
     assertTaggedEq( eval(q_dupl)(users ⊗ users), users ⊗ users ⊗ users )
-    // FIXME: Container(List()) vs. Container(Wrappers())
-    //assertTaggedEq( eval(q_match)(users ⊗ users), users )*/
-    //assertTaggedEq( eval(q_comp)(users ⊗ users), users )*/
+    assertTaggedEq( eval(q_match)(users ⊗ users), users )
+    assertTaggedEq( eval(q_comp)(users ⊗ users), users )
   }
 
   test("checking evals for the biproduct structure") {
@@ -125,10 +125,11 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     assertTaggedEq( eval(q_bip)(users ⊕ users ⊕ tweets), users ⊕ users ⊕ tweets )
     assertTaggedEq( eval(q_fork)(users ⊕ tweets), users ⊕ users ⊕ tweets )
     assertTaggedEq( eval(q_merge)(users ⊕ users),
-      user := Container[core.TitanVertex](users.value.values ++ users.value.values)
+      user := Container(users.value.values ++ users.value.values)
     )
-    // FIXME: Container(List()) vs. Container(Wrappers())
-    //assertTaggedEq( eval(q_comp)(users ⊕ tweets), tweets )*/
+    assertTaggedEq( eval(q_comp)(users ⊕ tweets),
+      tweet := Container(tweets.value.values ++ tweets.value.values)
+    )
   }
 
   test("checking evals for the graph structure") {
@@ -137,16 +138,14 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import queries.graphStructure._
 
     val repeated = user := Container[core.TitanVertex](
-      Seq(edu, edu, edu, edu, alexey, alexey, kim, kim, kim)
+      Iterable(edu, edu, edu, edu, alexey, alexey, kim, kim, kim)
     )
 
-    // FIXME: Container(List()) vs. Container(Wrappers())
-    //assertTaggedEq( eval(q_outV)(users), tweets )*/
+    assertTaggedEq( eval(q_outV)(users), tweets )
     assertTaggedEq( eval(q_inV)(tweets), repeated )
     assertTaggedEq( eval(q_compV)(users), repeated )
 
-    // FIXME: Container(List()) vs. Container(Wrappers())
-    //assertTaggedEq( eval(q_outE)(users), tweets )*/
+    assertTaggedEq( eval(q_outE)(users), tweets )
     assertTaggedEq( eval(q_inE)(tweets), repeated )
     assertTaggedEq( eval(q_compE)(users), repeated )
   }
@@ -156,7 +155,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.predicateStructure._
     import queries.predicateStructure._
 
-    val filtered = Container[core.TitanVertex](Seq(edu, kim))
+    val filtered = Container[core.TitanVertex](Iterable(edu, kim))
 
     assertTaggedEq( eval(q_quant)(users), pred := filtered )
     assertTaggedEq( eval(q_coerce)(pred := filtered), user := filtered )

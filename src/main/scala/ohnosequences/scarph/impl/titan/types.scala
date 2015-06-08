@@ -59,7 +59,7 @@ case object types {
   case class BlueprintsVerticesOps(val es: JIterable[blueprints.Vertex]) extends AnyVal {
 
     final def asTitanVertices: Iterable[titan.TitanVertex] =
-      es.asScala map { x => x.asInstanceOf[titan.TitanVertex] } //.asContainer
+      es.asScala map { x => x.asInstanceOf[titan.TitanVertex] }
   }
 
   implicit final def blueprintsEdgesOps(es: JIterable[blueprints.Edge]):
@@ -68,7 +68,7 @@ case object types {
   case class BlueprintsEdgesOps(val es: JIterable[blueprints.Edge]) extends AnyVal {
 
     final def asTitanEdges: Iterable[titan.TitanEdge] =
-      es.asInstanceOf[JIterable[titan.TitanEdge]].asScala //.asContainer
+      es.asScala map { x => x.asInstanceOf[titan.TitanEdge] }
   }
 
 }

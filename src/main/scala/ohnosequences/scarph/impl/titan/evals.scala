@@ -24,7 +24,7 @@ case object evals {
     type RawSource = TitanVertices
     type RawTarget = TitanVertices
 
-    def outVRaw(edge: AnyEdge)(v: RawSource): RawTarget =
+    def outVRaw(edge: AnyEdge.betweenElements)(v: RawSource): RawTarget =
       Container(
         v.values flatMap {
           _.query
@@ -33,7 +33,7 @@ case object evals {
             .vertexIds.asScala
         }
       )
-    def inVRaw(edge: AnyEdge)(v: RawTarget): RawSource =
+    def inVRaw(edge: AnyEdge.betweenElements)(v: RawTarget): RawSource =
       Container(
         v.values flatMap {
           _.query
@@ -44,25 +44,25 @@ case object evals {
       )
 
 
-    def outERaw(edge: AnyEdge)(v: RawSource): RawEdge =
+    def outERaw(edge: AnyEdge.betweenElements)(v: RawSource): RawEdge =
       v flatMap {
         _.query
           .labels(edge.label)
           .direction(Direction.OUT)
           .titanEdges.asScala
       }
-    def sourceRaw(edge: AnyEdge)(e: RawEdge): RawSource =
+    def sourceRaw(edge: AnyEdge.betweenElements)(e: RawEdge): RawSource =
       e map { _.getVertex(Direction.OUT) }
 
 
-    def inERaw(edge: AnyEdge)(v: RawTarget): RawEdge =
+    def inERaw(edge: AnyEdge.betweenElements)(v: RawTarget): RawEdge =
       v flatMap {
         _.query
           .labels(edge.label)
           .direction(Direction.IN)
           .titanEdges.asScala
       }
-    def targetRaw(edge: AnyEdge)(e: RawEdge): RawTarget =
+    def targetRaw(edge: AnyEdge.betweenElements)(e: RawEdge): RawTarget =
       e map { _.getVertex(Direction.IN) }
 
   }
@@ -183,34 +183,58 @@ case object evals {
 
   trait TitanPropertyStructure extends TitanGraph {
 
-    // implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
-    //     Eval[Container[E], get[P], Container[P#TargetVertex#Raw]] =
-    // new Eval[Container[E], get[P], Container[P#TargetVertex#Raw]] {
-    //
-    //   def rawApply(morph: InMorph): InVal => OutVal = { elements =>
-    //     elements map { _.getProperty[P#TargetVertex#Raw](morph.label) }
+    implicit def eval_get[
+      E <: core.TitanElement,
+      P <: AnyProperty
+    ]:
+        Eval[Container[E], get[P], Container[P#TargetVertex#Value]] =
+    new Eval[Container[E], get[P], Container[P#TargetVertex#Value]] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = {
+        elements: Container[E] => {
+        //
+        //   println{s"trying to get property ${morph.edge.targetVertex}"}
+        //   println{s"with tag ${morph.edge.targetVertex.valueTag}"}
+        //
+        //   new Container[morph.edge.targetVertex.Value](Seq[morph.edge.targetVertex.Value]())
+        // }
+
+          elements map { _.getProperty[P#TargetVertex#Value](morph.edge.label) }
+        }
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
+
+
+    implicit def eval_lookupV[
+      VT,
+      P <: AnyProperty {
+        type SourceVertex <: AnyVertex;
+        type TargetVertex <: AnyValueType { type Value = VT }
+      }
+    ]
+    :   Eval[Container[VT], lookup[P], TitanVertices] =
+    new Eval[Container[VT], lookup[P], TitanVertices] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = { values =>
+        values flatMap { v =>
+          graph.query.has(morph.label, v)
+            .vertices.asTitanVertices
+        }
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
+
+    // implicit def eval_lookupE_Alt[
+    //   VT,
+    //   P <: AnyProperty {
+    //     type SourceVertex <: AnyEdge;
+    //     type TargetVertex <: AnyValueType { type Value = VT }
     //   }
-    //
-    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    // }
-    //
-    //
-    // implicit def eval_lookupV[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyVertex }]:
-    //     Eval[Container[VT], lookup[P], TitanVertices] =
-    // new Eval[Container[VT], lookup[P], TitanVertices] {
-    //
-    //   def rawApply(morph: InMorph): InVal => OutVal = { values =>
-    //     values flatMap { v =>
-    //       graph.query.has(morph.label, v)
-    //         .vertices.asTitanVertices
-    //     }
-    //   }
-    //
-    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    // }
-    //
-    // implicit def eval_lookupE[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyEdge }]:
-    //     Eval[Container[VT], lookup[P], TitanEdges] =
+    // ]
+    // :   Eval[Container[VT], lookup[P], TitanEdges] =
     // new Eval[Container[VT], lookup[P], TitanEdges] {
     //
     //   def rawApply(morph: InMorph): InVal => OutVal = { values =>
@@ -222,6 +246,26 @@ case object evals {
     //
     //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
     // }
+
+    implicit def eval_lookupE[
+      VT,
+      P <: AnyProperty {
+        type SourceVertex <: AnyEdge;
+        type TargetVertex <: AnyValueType { type Value = VT }
+      }
+    ]
+    :   Eval[Container[VT], lookup[P], TitanEdges] =
+    new Eval[Container[VT], lookup[P], TitanEdges] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = { values =>
+        values flatMap { v =>
+          graph.query.has(morph.label, v)
+            .edges.asTitanEdges
+        }
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
 
   }
 

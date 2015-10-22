@@ -34,10 +34,10 @@ object titanSchema {
   final case class TitanGraphSchemaOps(val graph: TitanGraph) extends AnyVal {
 
     final def addPropertyKey(v: AnyValueType): titan.PropertyKey = {
-      println(s"  Creating [${v.label}] property key (${v.rawTag})")
+      println(s"  Creating [${v.label}] property key (${v.valueTag})")
 
       graph.makePropertyKey(v.label)
-        .dataType(v.rawTag.runtimeClass)
+        .dataType(v.valueTag.runtimeClass)
         .make()
     }
 

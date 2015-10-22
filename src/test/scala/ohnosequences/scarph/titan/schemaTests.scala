@@ -68,12 +68,12 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val tweets = vertices(tweet)
     val postEdges = edges(posted)
 
-    val names = name := Container[String](Iterable("@eparejatobes", "@laughedelic", "@evdokim"))
-    val ages = age := Container[Integer](Iterable(95, 5, 22))
-    val times = time := Container[String](Iterable(
-      "27.10.2013", "20.3.2013", "19.2.2013", "13.11.2012", "15.2.2014",
-      "7.2.2014", "23.2.2012", "7.7.2011", "22.6.2011"
-    ))
+    // val names = name := Container[String](Iterable("@eparejatobes", "@laughedelic", "@evdokim"))
+    // val ages = age := Container[Integer](Iterable(95, 5, 22))
+    // val times = time := Container[String](Iterable(
+    //   "27.10.2013", "20.3.2013", "19.2.2013", "13.11.2012", "15.2.2014",
+    //   "7.2.2014", "23.2.2012", "7.7.2011", "22.6.2011"
+    // ))
 
     val usrs = users.value.values.toList
     val edu = usrs(0)
@@ -96,13 +96,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val ps = t.evals.propertyStructure(twitterGraph); import ps._
     import queries.propertyStructure._
 
-    assertTaggedEq( eval(q_getV)(users), ages )
-    assertTaggedEq( eval(q_lookupV)(names), users )
-    assertTaggedEq( eval(q_compV)(names), ages )
+    // assertTaggedEq( eval(q_getV)(users), ages )
+    // assertTaggedEq( eval(q_lookupV)(names), users )
+    // assertTaggedEq( eval(q_compV)(names), ages )
 
-    assertTaggedEq( eval(q_getE)(postEdges), times )
-    assertTaggedEq( eval(q_lookupE)(times), postEdges )
-    assertTaggedEq( eval(q_compE)(postEdges), postEdges )
+    // assertTaggedEq( eval(q_getE)(postEdges), times )
+    // assertTaggedEq( eval(q_lookupE)(times), postEdges )
+    // assertTaggedEq( eval(q_compE)(postEdges), postEdges )
   }
 
   test("checking evals for the tensor structure") {

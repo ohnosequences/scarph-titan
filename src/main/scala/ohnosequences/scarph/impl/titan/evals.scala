@@ -78,12 +78,12 @@ case object evals {
 
     type TensorBound = AnyTitanType
     type RawTensor[L <: TensorBound, R <: TensorBound] = Duplet[L, R]
-    type RawUnit = core.TitanGraph
+    type RawUnit = TitanUnit
 
     def tensorRaw[L <: TensorBound, R <: TensorBound](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
     def leftRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): L = t.left
     def rightRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): R = t.right
-    def toUnitRaw[X <: TensorBound](x: X): RawUnit = graph
+    def toUnitRaw[X <: TensorBound](x: X): RawUnit = TitanUnit(graph)
 
     implicit def titanUnitToVertices:
         FromUnit[TitanUnit, TitanVertices] =
@@ -183,45 +183,45 @@ case object evals {
 
   trait TitanPropertyStructure extends TitanGraph {
 
-    implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
-        Eval[Container[E], get[P], Container[P#Value#Raw]] =
-    new Eval[Container[E], get[P], Container[P#Value#Raw]] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = { elements =>
-        elements map { _.getProperty[P#Value#Raw](morph.property.label) }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
-
-
-    implicit def eval_lookupV[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyVertex }]:
-        Eval[Container[VT], lookup[P], TitanVertices] =
-    new Eval[Container[VT], lookup[P], TitanVertices] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.property.label, v)
-            .vertices.asTitanVertices
-        }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
-
-    implicit def eval_lookupE[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyEdge }]:
-        Eval[Container[VT], lookup[P], TitanEdges] =
-    new Eval[Container[VT], lookup[P], TitanEdges] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.property.label, v)
-            .edges.asTitanEdges
-        }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    // implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
+    //     Eval[Container[E], get[P], Container[P#TargetVertex#Raw]] =
+    // new Eval[Container[E], get[P], Container[P#TargetVertex#Raw]] {
+    //
+    //   def rawApply(morph: InMorph): InVal => OutVal = { elements =>
+    //     elements map { _.getProperty[P#TargetVertex#Raw](morph.label) }
+    //   }
+    //
+    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    // }
+    //
+    //
+    // implicit def eval_lookupV[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyVertex }]:
+    //     Eval[Container[VT], lookup[P], TitanVertices] =
+    // new Eval[Container[VT], lookup[P], TitanVertices] {
+    //
+    //   def rawApply(morph: InMorph): InVal => OutVal = { values =>
+    //     values flatMap { v =>
+    //       graph.query.has(morph.label, v)
+    //         .vertices.asTitanVertices
+    //     }
+    //   }
+    //
+    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    // }
+    //
+    // implicit def eval_lookupE[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyEdge }]:
+    //     Eval[Container[VT], lookup[P], TitanEdges] =
+    // new Eval[Container[VT], lookup[P], TitanEdges] {
+    //
+    //   def rawApply(morph: InMorph): InVal => OutVal = { values =>
+    //     values flatMap { v =>
+    //       graph.query.has(morph.label, v)
+    //         .edges.asTitanEdges
+    //     }
+    //   }
+    //
+    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    // }
 
   }
 
@@ -256,7 +256,7 @@ case object evals {
     import morphisms._
 
     implicit final def eval_quantifyOutE[
-      P <: AnyPredicate { type Element <: AnyEdge }
+      P <: AnyPredicate { type Element <: AnyEdge.betweenElements }
     ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
     new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
 

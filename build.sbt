@@ -9,9 +9,9 @@ scalaVersion        := "2.11.6"
 crossScalaVersions  := Seq("2.10.5")
 
 libraryDependencies ++= Seq(
-  "ohnosequences"           %% "cosas"            % "0.6.0",
-  "ohnosequences"           %% "scarph"           % "0.5.0.better-tests-SNAPSHOT",
-  "ohnosequences"           %% "scarph"           % "0.5.0.better-tests-SNAPSHOT" % Test classifier "tests",
+  // "ohnosequences"           %% "cosas"            % "0.6.0",
+  "ohnosequences"           %% "scarph"           % "0.5.0-SNAPSHOT",
+  "ohnosequences"           %% "scarph"           % "0.5.0-SNAPSHOT" % Test classifier "tests",
   "com.thinkaurelius.titan" %  "titan-core"       % "0.5.4",
   "com.thinkaurelius.titan" %  "titan-berkeleyje" % "0.5.4",
   "org.scalatest"           %% "scalatest"        % "2.2.4" % Test,
@@ -24,5 +24,9 @@ testOptions in Test += Tests.Argument("-oD")
 
 // no name hashing, funny stuff happens
 incOptions := incOptions.value.withNameHashing(false)
+
+wartremoverExcluded ++= Seq(
+  baseDirectory.value / "src/main/scala/ohnosequences/scarph/impl/titan/types.scala"
+)
 
 scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")

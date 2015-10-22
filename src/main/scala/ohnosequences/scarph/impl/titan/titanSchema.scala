@@ -10,7 +10,7 @@ object titanSchema {
   import titan.Multiplicity
 
   import scala.reflect._
-  import scala.reflect.runtime.universe._
+  // import scala.reflect.runtime.universe._
 
   final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity = a.sourceArity match {
 

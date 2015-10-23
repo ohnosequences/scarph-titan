@@ -9,9 +9,8 @@ scalaVersion        := "2.11.6"
 crossScalaVersions  := Seq("2.10.5")
 
 libraryDependencies ++= Seq(
-  // "ohnosequences"           %% "cosas"            % "0.6.0",
-  "ohnosequences"           %% "scarph"           % "0.5.0-SNAPSHOT",
-  "ohnosequences"           %% "scarph"           % "0.5.0-SNAPSHOT" % Test classifier "tests",
+  "ohnosequences"           %% "scarph"           % "0.5.0-properties-as-edges-SNAPSHOT",
+  "ohnosequences"           %% "scarph"           % "0.5.0-properties-as-edges-SNAPSHOT" % Test classifier "tests",
   "com.thinkaurelius.titan" %  "titan-core"       % "0.5.4",
   "com.thinkaurelius.titan" %  "titan-berkeleyje" % "0.5.4",
   "org.scalatest"           %% "scalatest"        % "2.2.4" % Test,

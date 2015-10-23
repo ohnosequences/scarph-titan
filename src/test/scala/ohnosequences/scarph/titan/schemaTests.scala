@@ -141,13 +141,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       Iterable(edu, edu, edu, edu, alexey, alexey, kim, kim, kim)
     )
 
-    assertTaggedEq( eval(q_outV)(users), tweets )
-    assertTaggedEq( eval(q_inV)(tweets), repeated )
-    assertTaggedEq( eval(q_compV)(users), repeated )
+    assertTaggedEq( eval(outV(posted))(users), tweets )
+    assertTaggedEq( eval(inV(posted))(tweets), repeated )
+    assertTaggedEq( eval(outV(posted) >=> inV(posted))(users), repeated )
 
-    assertTaggedEq( eval(q_outE)(users), tweets )
-    assertTaggedEq( eval(q_inE)(tweets), repeated )
-    assertTaggedEq( eval(q_compE)(users), repeated )
+    assertTaggedEq( eval(outE(posted) >=> target(posted))(users), tweets )
+    assertTaggedEq( eval(inE(posted) >=> source(posted))(tweets), repeated )
+    assertTaggedEq( eval( (outE(posted) >=> target(posted)) >=> (inE(posted) >=> source(posted)) )(users), repeated )
   }
 
   test("checking evals for the predicate structure") {

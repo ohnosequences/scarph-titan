@@ -193,13 +193,13 @@ case object evals {
       def rawApply(morph: InMorph): InVal => OutVal = {
         elements: Container[E] => {
         //
-        //   println{s"trying to get property ${morph.edge.target}"}
-        //   println{s"with tag ${morph.edge.target.valueTag}"}
+        //   println{s"trying to get property ${morph.relation.target}"}
+        //   println{s"with tag ${morph.relation.target.valueTag}"}
         //
-        //   new Container[morph.edge.target.Value](Seq[morph.edge.target.Value]())
+        //   new Container[morph.relation.target.Value](Seq[morph.relation.target.Value]())
         // }
 
-          elements map { _.getProperty[morph.edge.target.Value](morph.edge.label) }
+          elements map { _.getProperty[morph.relation.target.Value](morph.relation.label) }
         }
       }
 
@@ -219,7 +219,7 @@ case object evals {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>
-          graph.query.has(morph.edge.label, v)
+          graph.query.has(morph.relation.label, v)
             .vertices.asTitanVertices
         }
       }
@@ -237,7 +237,7 @@ case object evals {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>
-          graph.query.has(morph.edge.label, v)
+          graph.query.has(morph.relation.label, v)
             .vertices.asTitanVertices
         }
       }
@@ -257,7 +257,7 @@ case object evals {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>
-          graph.query.has(morph.edge.label, v)
+          graph.query.has(morph.relation.label, v)
             .edges.asTitanEdges
         }
       }
@@ -275,7 +275,7 @@ case object evals {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>
-          graph.query.has(morph.edge.label, v)
+          graph.query.has(morph.relation.label, v)
             .edges.asTitanEdges
         }
       }
@@ -316,24 +316,24 @@ case object evals {
   trait TitanAfterRewriteEvals {
     import morphisms._
 
-    implicit final def eval_quantifyOutE[
-      P <: AnyPredicate { type Element <: AnyEdge }
-    ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
-    new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
-        vertices flatMap { v =>
-          addConditions(morph.predicate,
-            v.query
-            .labels(morph.edge.label)
-            .direction(Direction.IN)
-          )
-          .edges.asTitanEdges
-        }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    // implicit final def eval_quantifyOutE[
+    //   P <: AnyPredicate { type Element <: AnyEdge }
+    // ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
+    // new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
+    //
+    //   def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
+    //     vertices flatMap { v =>
+    //       addConditions(morph.predicate,
+    //         v.query
+    //         .labels(morph.relation.label)
+    //         .direction(Direction.IN)
+    //       )
+    //       .edges.asTitanEdges
+    //     }
+    //   }
+    //
+    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    // }
 
   }
 

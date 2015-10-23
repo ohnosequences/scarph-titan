@@ -14,8 +14,8 @@ object morphisms {
     type Edge = Predicate#Element
     val  edge = predicate.element
 
-    type     In = Edge#SourceVertex
-    lazy val in = edge.sourceVertex
+    type     In = Edge#Source
+    lazy val in = edge.source
 
     type     Out = Predicate
     lazy val out = predicate
@@ -34,8 +34,8 @@ object morphisms {
     type Edge = Predicate#Element
     val  edge = predicate.element
 
-    type     In = Edge#TargetVertex
-    lazy val in = edge.targetVertex
+    type     In = Edge#Target
+    lazy val in = edge.target
 
     type     Out = Predicate
     lazy val out = predicate

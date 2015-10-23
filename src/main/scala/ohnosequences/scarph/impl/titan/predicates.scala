@@ -32,12 +32,12 @@ object predicates {
   def evalPredicate[P <: AnyPredicate, TE <: titan.TitanElement](predicate: P, elem: TE): Boolean = {
     predicate.conditions.foldLeft(true){ (acc, c) =>
       c match {
-        case Equal(p, value)          => acc &&              EQUAL.evaluate(elem.getProperty[p.targetVertex.Raw](p.label), value)
-        case NotEqual(p, value)       => acc &&          NOT_EQUAL.evaluate(elem.getProperty[p.targetVertex.Raw](p.label), value)
-        case Less(p, value)           => acc &&          LESS_THAN.evaluate(elem.getProperty[p.targetVertex.Raw](p.label), value)
-        case LessOrEqual(p, value)    => acc &&    LESS_THAN_EQUAL.evaluate(elem.getProperty[p.targetVertex.Raw](p.label), value)
-        case Greater(p, value)        => acc &&       GREATER_THAN.evaluate(elem.getProperty[p.targetVertex.Raw](p.label), value)
-        case GreaterOrEqual(p, value) => acc && GREATER_THAN_EQUAL.evaluate(elem.getProperty[p.targetVertex.Raw](p.label), value)
+        case Equal(p, value)          => acc &&              EQUAL.evaluate(elem.getProperty[p.target.Raw](p.label), value)
+        case NotEqual(p, value)       => acc &&          NOT_EQUAL.evaluate(elem.getProperty[p.target.Raw](p.label), value)
+        case Less(p, value)           => acc &&          LESS_THAN.evaluate(elem.getProperty[p.target.Raw](p.label), value)
+        case LessOrEqual(p, value)    => acc &&    LESS_THAN_EQUAL.evaluate(elem.getProperty[p.target.Raw](p.label), value)
+        case Greater(p, value)        => acc &&       GREATER_THAN.evaluate(elem.getProperty[p.target.Raw](p.label), value)
+        case GreaterOrEqual(p, value) => acc && GREATER_THAN_EQUAL.evaluate(elem.getProperty[p.target.Raw](p.label), value)
         case _ => acc
       }
     }

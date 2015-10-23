@@ -21,7 +21,7 @@ case object rewrites {
 
 
     implicit def m_quantified_outE[
-      M <: AnyGraphMorphism { type Out = E#SourceVertex },
+      M <: AnyGraphMorphism { type Out = E#Source },
       E <: AnyEdge,
       P <: AnyPredicate { type Element = E }
     ]: (M >=> outE[E] >=> quantify[P]) rewriteTo
@@ -46,7 +46,7 @@ case object rewrites {
 
 
     implicit def m_quantified_inE[
-      M <: AnyGraphMorphism { type Out = E#TargetVertex },
+      M <: AnyGraphMorphism { type Out = E#Target },
       E <: AnyEdge,
       P <: AnyPredicate { type Element = E }
     ]: (M >=> inE[E] >=> quantify[P]) rewriteTo

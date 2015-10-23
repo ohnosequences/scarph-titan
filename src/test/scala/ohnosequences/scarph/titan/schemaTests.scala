@@ -96,18 +96,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val ps = t.evals.propertyStructure(twitterGraph); import ps._
     import queries.propertyStructure._
 
-    // val argh = zzz.rawApply(get(user.age))
-    // val zzz = eval(q_getV)(users)
     assert { eval(q_getV)(users) === ages }
-
     assert { eval(q_lookupV)(names) === users }
     assert { eval(q_compV)(names) === ages }
-    //
     assert { eval(q_getE)(postEdges) === times }
-    assert { eval(q_lookupE)(times)(eval_lookupE[String,posted.time.type]) === postEdges }
+    assert { eval(q_lookupE)(times) === postEdges }
 
-    // TODO fails I don't know why
-    // assert { eval(q_compE)(postEdges) === postEdges }
+    assert { eval(q_compE)(postEdges) === postEdges }
   }
 
   test("checking evals for the tensor structure") {

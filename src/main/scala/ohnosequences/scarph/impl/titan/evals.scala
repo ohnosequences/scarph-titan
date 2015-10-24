@@ -316,24 +316,24 @@ case object evals {
   trait TitanAfterRewriteEvals {
     import morphisms._
 
-    // implicit final def eval_quantifyOutE[
-    //   P <: AnyPredicate { type Element <: AnyEdge }
-    // ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
-    // new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
-    //
-    //   def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
-    //     vertices flatMap { v =>
-    //       addConditions(morph.predicate,
-    //         v.query
-    //         .labels(morph.relation.label)
-    //         .direction(Direction.IN)
-    //       )
-    //       .edges.asTitanEdges
-    //     }
-    //   }
-    //
-    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    // }
+    implicit final def eval_quantifyOutE[
+      P <: AnyPredicate { type Element <: AnyEdge }
+    ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
+    new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
+
+      def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
+        vertices flatMap { v =>
+          addConditions(morph.predicate,
+            v.query
+            .labels(morph.edge.label)
+            .direction(Direction.IN)
+          )
+          .edges.asTitanEdges
+        }
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
 
   }
 

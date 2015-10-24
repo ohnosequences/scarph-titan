@@ -4,4 +4,4 @@ addSbtPlugin("ohnosequences" % "nice-sbt-settings" % "0.6.0")
 
 
 dependencyOverrides +=
-  "joda-time" % "joda-time" % "2.7"
+  "joda-time" % "joda-time" % "2.8.1"

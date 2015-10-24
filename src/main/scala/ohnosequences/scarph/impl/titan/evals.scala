@@ -85,24 +85,33 @@ case object evals {
     def rightRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): R = t.right
     def toUnitRaw[X <: TensorBound](x: X): RawUnit = TitanUnit(graph)
 
-    implicit def titanUnitToVertices:
-        FromUnit[TitanUnit, TitanVertices] =
-    new FromUnit[TitanUnit, TitanVertices] {
+    implicit final def eval_fromUnitV[
+      T <: AnyVertex
+    ]:  Eval[RawUnit, fromUnit[T], TitanVertices] =
+    new Eval[RawUnit, fromUnit[T], TitanVertices] {
 
-      def fromUnit(u: U, e: AnyGraphObject): T =
-        Container(graph.query.has("label", e.label)
+      def rawApply(morph: InMorph): InVal => OutVal = { inVal: InVal =>
+
+        Container(graph.query.has("label", morph.obj.label)
           .vertices.asTitanVertices)
+      }
+
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
     }
 
-    implicit def titanUnitToEdges:
-        FromUnit[TitanUnit, TitanEdges] =
-    new FromUnit[TitanUnit, TitanEdges] {
+    implicit final def eval_fromUnitE[
+      T <: AnyEdge
+    ]:  Eval[RawUnit, fromUnit[T], TitanEdges] =
+    new Eval[RawUnit, fromUnit[T], TitanEdges] {
 
-      def fromUnit(u: U, e: AnyGraphObject): T =
-        Container(graph.query.has("label", e.label)
+      def rawApply(morph: InMorph): InVal => OutVal = { inVal: InVal =>
+
+        Container(graph.query.has("label", morph.obj.label)
           .edges.asTitanEdges)
-    }
+      }
 
+      def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    }
 
     implicit def containerMatch[X]:
         Matchable[Container[X]] =
@@ -128,7 +137,6 @@ case object evals {
     }
 
   }
-
 
 
   trait TitanBiproductStructure extends BiproductStructure {
@@ -262,8 +270,8 @@ case object evals {
         type Source <: AnyEdge;
       }
     ]
-    :   Eval[Container[P#Target#Val], lookup[P], TitanEdges] =
-    new Eval[Container[P#Target#Val], lookup[P], TitanEdges] {
+    :   Eval[Container[P#Target#Val], inV[P], TitanEdges] =
+    new Eval[Container[P#Target#Val], inV[P], TitanEdges] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>

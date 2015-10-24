@@ -95,14 +95,18 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.categoryStructure._
     val ps = t.evals.propertyStructure(twitterGraph); import ps._
     import queries.propertyStructure._
+    import ohnosequences.cosas.types._
 
-    assert { eval(q_getV)(users) === ages }
+    assert { eval(q_getV)(users) === ages  }
     assert { eval(q_lookupV)(names) === users }
     assert { eval(q_compV)(names) === ages }
     assert { eval(q_getE)(postEdges) === times }
     assert { eval(q_lookupE)(times) === postEdges }
 
+    assert { eval(get(user.name))(users) === names }
     assert { eval(q_compE)(postEdges) === postEdges }
+
+    assert { eval( get(user.name) >=> lookup(user.name) >=> get(user.name))(users) === names }
   }
 
   test("checking evals for the tensor structure") {

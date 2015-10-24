@@ -187,31 +187,23 @@ case object evals {
       E <: core.TitanElement,
       P <: AnyProperty
     ]:
-        Eval[Container[E], get[P], Container[P#Target#Value]] =
-    new Eval[Container[E], get[P], Container[P#Target#Value]] {
+        Eval[Container[E], get[P], Container[P#Target#Val]] =
+    new Eval[Container[E], get[P], Container[P#Target#Val]] {
 
       def rawApply(morph: InMorph): InVal => OutVal = {
         elements: Container[E] => {
-        //
-        //   println{s"trying to get property ${morph.relation.target}"}
-        //   println{s"with tag ${morph.relation.target.valueTag}"}
-        //
-        //   new Container[morph.relation.target.Value](Seq[morph.relation.target.Value]())
-        // }
-
-          elements map { _.getProperty[morph.relation.target.Value](morph.relation.label) }
+          elements map { _.getProperty[P#Target#Val](morph.relation.label) }
         }
       }
 
       def present(morph: InMorph): Seq[String] = Seq(morph.label)
     }
 
-
     implicit def eval_lookupV[
       VT,
       P <: AnyProperty {
         type Source <: AnyVertex;
-        type Target <: AnyValueType { type Value = VT }
+        type Target <: AnyValueType { type Val = VT }
       }
     ]
     :   Eval[Container[VT], lookup[P], TitanVertices] =
@@ -232,8 +224,8 @@ case object evals {
         type Source <: AnyVertex
       }
     ]
-    :   Eval[Container[P#Target#Value], lookup[P], TitanVertices] =
-    new Eval[Container[P#Target#Value], lookup[P], TitanVertices] {
+    :   Eval[Container[P#Target#Val], lookup[P], TitanVertices] =
+    new Eval[Container[P#Target#Val], lookup[P], TitanVertices] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>
@@ -249,7 +241,7 @@ case object evals {
       VT,
       P <: AnyProperty {
         type Source <: AnyEdge;
-        type Target <: AnyValueType { type Value = VT }
+        type Target <: AnyValueType { type Val = VT }
       }
     ]
     :   Eval[Container[VT], lookup[P], TitanEdges] =
@@ -270,8 +262,8 @@ case object evals {
         type Source <: AnyEdge;
       }
     ]
-    :   Eval[Container[P#Target#Value], lookup[P], TitanEdges] =
-    new Eval[Container[P#Target#Value], lookup[P], TitanEdges] {
+    :   Eval[Container[P#Target#Val], lookup[P], TitanEdges] =
+    new Eval[Container[P#Target#Val], lookup[P], TitanEdges] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>

@@ -151,8 +151,8 @@ case object evals {
     new ZeroFor[E, TitanEdges] { def zero(o: Obj): T = Container[core.TitanEdge](Iterable()) }
 
     implicit def valuesZero[VT <: AnyValueType]:
-        ZeroFor[VT, Container[VT#Raw]] =
-    new ZeroFor[VT, Container[VT#Raw]] { def zero(o: Obj): T = Container[VT#Raw](Iterable()) }
+        ZeroFor[VT, Container[VT#Val]] =
+    new ZeroFor[VT, Container[VT#Val]] { def zero(o: Obj): T = Container[VT#Val](Iterable()) }
 
     implicit def predicatesZero[P <: AnyPredicate, E](implicit elem: ZeroFor[P#Element, E]):
         ZeroFor[P, E] =
@@ -184,11 +184,11 @@ case object evals {
   trait TitanPropertyStructure extends TitanGraph {
 
     implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
-        Eval[Container[E], get[P], Container[P#Target#Raw]] =
-    new Eval[Container[E], get[P], Container[P#Target#Raw]] {
+        Eval[Container[E], get[P], Container[P#Target#Val]] =
+    new Eval[Container[E], get[P], Container[P#Target#Val]] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { elements =>
-        elements map { _.getProperty[P#Target#Raw](morph.relation.label) }
+        elements map { _.getProperty[P#Target#Val](morph.relation.label) }
       }
 
       def present(morph: InMorph): Seq[String] = Seq(morph.label)
@@ -197,7 +197,7 @@ case object evals {
 
     implicit def eval_lookupV[
       V,
-      P <: AnyProperty { type Source <: AnyVertex; type Target <: AnyValueType { type Raw >: V }  }
+      P <: AnyProperty { type Source <: AnyVertex; type Target <: AnyValueType { type Val = V }  }
     ]:
         Eval[Container[V], lookup[P], TitanVertices] =
     new Eval[Container[V], lookup[P], TitanVertices] {
@@ -214,7 +214,7 @@ case object evals {
 
     implicit def eval_lookupE[
       V,
-      P <: AnyProperty { type Source <: AnyEdge; type Target <: AnyValueType { type Raw >: V }  }
+      P <: AnyProperty { type Source <: AnyEdge; type Target <: AnyValueType { type Val = V }  }
     ]:
         Eval[Container[V], lookup[P], TitanEdges] =
     new Eval[Container[V], lookup[P], TitanEdges] {

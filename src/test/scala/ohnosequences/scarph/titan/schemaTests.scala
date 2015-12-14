@@ -86,9 +86,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.categoryStructure._
     import queries.categoryStructure._
 
-    assertTaggedEq( eval(q_id)(users), users )
-    assertTaggedEq( eval(q_comp1)(users), users )
-    assertTaggedEq( eval(q_comp2)(users), users )
+    assert( eval(q_id)(users) =~= users )
+    assert( eval(q_comp1)(users) =~= users )
+    assert( eval(q_comp2)(users) =~= users )
   }
 
   test("checking evals for the property structure") {
@@ -96,13 +96,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val ps = t.evals.propertyStructure(twitterGraph); import ps._
     import queries.propertyStructure._
 
-    assertTaggedEq( eval(q_getV)(users), ages )
-    assertTaggedEq( eval(q_lookupV)(names), users )
-    assertTaggedEq( eval(q_compV)(names), ages )
+    assert( eval(q_getV)(users)(ps.eval_get[core.TitanVertex, user.age.type]) =~= ages )
+    assert( eval(q_lookupV)(names) =~= users )
+    assert( eval(q_compV)(names) =~= ages )
 
-    assertTaggedEq( eval(q_getE)(postEdges), times )
-    assertTaggedEq( eval(q_lookupE)(times), postEdges )
-    assertTaggedEq( eval(q_compE)(postEdges), postEdges )
+    assert( eval(q_getE)(postEdges) =~= times )
+    assert( eval(q_lookupE)(times) =~= postEdges )
+    assert( eval(q_compE)(postEdges) =~= postEdges )
   }
 
   test("checking evals for the tensor structure") {
@@ -110,10 +110,10 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val ts = t.evals.tensorStructure(twitterGraph); import ts._
     import queries.tensorStructure._
 
-    assertTaggedEq( eval(q_tensor)(users ⊗ users ⊗ users), users ⊗ users ⊗ users )
-    assertTaggedEq( eval(q_dupl)(users ⊗ users), users ⊗ users ⊗ users )
-    assertTaggedEq( eval(q_match)(users ⊗ users), users )
-    assertTaggedEq( eval(q_comp)(users ⊗ users), users )
+    assert( eval(q_tensor)(users ⊗ users ⊗ users) =~= (users ⊗ users ⊗ users) )
+    assert( eval(q_dupl)(users ⊗ users) =~= (users ⊗ users ⊗ users) )
+    assert( eval(q_match)(users ⊗ users) =~= users )
+    assert( eval(q_comp)(users ⊗ users) =~= users )
   }
 
   test("checking evals for the biproduct structure") {
@@ -121,14 +121,14 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.biproductStructure._
     import queries.biproductStructure._
 
-    assertTaggedEq( eval(q_inj)(tweets), nousers ⊕ nousers ⊕ tweets )
-    assertTaggedEq( eval(q_bip)(users ⊕ users ⊕ tweets), users ⊕ users ⊕ tweets )
-    assertTaggedEq( eval(q_fork)(users ⊕ tweets), users ⊕ users ⊕ tweets )
-    assertTaggedEq( eval(q_merge)(users ⊕ users),
-      user := Container(users.value.values ++ users.value.values)
+    assert( eval(q_inj)(tweets) =~= (nousers ⊕ nousers ⊕ tweets) )
+    assert( eval(q_bip)(users ⊕ users ⊕ tweets) =~= (users ⊕ users ⊕ tweets) )
+    assert( eval(q_fork)(users ⊕ tweets) =~= (users ⊕ users ⊕ tweets) )
+    assert( eval(q_merge)(users ⊕ users) =~=
+      (user := Container(users.value.values ++ users.value.values))
     )
-    assertTaggedEq( eval(q_comp)(users ⊕ tweets),
-      tweet := Container(tweets.value.values ++ tweets.value.values)
+    assert( eval(q_comp)(users ⊕ tweets) =~=
+      (tweet := Container(tweets.value.values ++ tweets.value.values))
     )
   }
 
@@ -141,13 +141,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       Iterable(edu, edu, edu, edu, alexey, alexey, kim, kim, kim)
     )
 
-    assertTaggedEq( eval(q_outV)(users), tweets )
-    assertTaggedEq( eval(q_inV)(tweets), repeated )
-    assertTaggedEq( eval(q_compV)(users), repeated )
+    assert( eval(q_outV)(users) =~= tweets )
+    assert( eval(q_inV)(tweets) =~= repeated )
+    assert( eval(q_compV)(users) =~= repeated )
 
-    assertTaggedEq( eval(q_outE)(users), tweets )
-    assertTaggedEq( eval(q_inE)(tweets), repeated )
-    assertTaggedEq( eval(q_compE)(users), repeated )
+    assert( eval(q_outE)(users) =~= tweets )
+    assert( eval(q_inE)(tweets) =~= repeated )
+    assert( eval(q_compE)(users) =~= repeated )
   }
 
   test("checking evals for the predicate structure") {
@@ -157,9 +157,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     val filtered = Container[core.TitanVertex](Iterable(edu, kim))
 
-    assertTaggedEq( eval(q_quant)(users), pred := filtered )
-    assertTaggedEq( eval(q_coerce)(pred := filtered), user := filtered )
-    assertTaggedEq( eval(q_comp)(users), user := filtered )
+    assert( eval(q_quant)(users) =~= (pred := filtered) )
+    assert( eval(q_coerce)(pred := filtered) =~= (user := filtered) )
+    assert( eval(q_comp)(users) =~= (user := filtered) )
   }
 
 }

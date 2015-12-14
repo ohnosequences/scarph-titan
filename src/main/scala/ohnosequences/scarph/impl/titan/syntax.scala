@@ -12,10 +12,10 @@ case object syntax {
 
   case class TitanObjectValSyntax[F <: AnyGraphObject, VF <: AnyTitanType](vf: F := VF) extends AnyVal {
 
-    def ⊗[S <: AnyGraphObject, VS <: AnyTitanType with S#Raw](vs: S := VS): (F ⊗ S) := Duplet[VF, VS] =
+    def ⊗[S <: AnyGraphObject, VS <: AnyTitanType](vs: S := VS): (F ⊗ S) := Duplet[VF, VS] =
       (vf.tpe ⊗ vs.tpe) := Duplet(vf.value, vs.value)
 
-    def ⊕[S <: AnyGraphObject, VS <: AnyTitanType with S#Raw](vs: S := VS): (F ⊕ S) := Duplet[VF, VS] =
+    def ⊕[S <: AnyGraphObject, VS <: AnyTitanType](vs: S := VS): (F ⊕ S) := Duplet[VF, VS] =
       (vf.tpe ⊕ vs.tpe) := Duplet(vf.value, vs.value)
   }
 }

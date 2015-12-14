@@ -49,7 +49,6 @@ case object types {
   final type TitanQueries  = Container[blueprints.Query]
 
   final type JIterable[T]  = java.lang.Iterable[T]
-  // final type TitanUnit     = titan.TitanGraph
 
 
 

@@ -6,15 +6,19 @@ organization  := "ohnosequences"
 bucketSuffix  := "era7.com"
 
 scalaVersion        := "2.11.7"
-crossScalaVersions  := Seq("2.10.5")
+// crossScalaVersions  := Seq("2.10.6")
+
+val titanVersion = "0.5.4"
+val scarphVersion = "0.4.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
-  "ohnosequences"           %% "scarph"           % "0.4.0-SNAPSHOT",
-  "com.thinkaurelius.titan" %  "titan-core"       % "0.5.2",
-  "com.thinkaurelius.titan" %  "titan-berkeleyje" % "0.5.2",
-  "org.scalatest"           %% "scalatest"        % "2.2.5" % Test,
-  "org.slf4j"               %  "slf4j-nop"        % "1.7.5" % Test,
-  "ohnosequences"           %% "scarph"           % "0.4.0-SNAPSHOT" % Test classifier "tests"
+  "ohnosequences"           %% "cosas"            % "0.8.0",
+  "com.thinkaurelius.titan" %  "titan-core"       % titanVersion,
+  "com.thinkaurelius.titan" %  "titan-berkeleyje" % titanVersion,
+  "ohnosequences"           %% "scarph"           % scarphVersion,
+  "ohnosequences"           %% "scarph"           % scarphVersion % Test classifier "tests",
+  "org.scalatest"           %% "scalatest"        % "2.2.5"       % Test,
+  "org.slf4j"               %  "slf4j-nop"        % "1.7.5"       % Test
   // ^ getting rid of the annoying warning about logging ^
 )
 
@@ -22,10 +26,11 @@ libraryDependencies ++= Seq(
 testOptions in Test += Tests.Argument("-oD")
 
 // no name hashing, funny stuff happens
-incOptions := incOptions.value.withNameHashing(false)
+// incOptions := incOptions.value.withNameHashing(false)
+// scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")
 
-wartremoverExcluded ++= Seq(
-  baseDirectory.value / "src/main/scala/ohnosequences/scarph/impl/titan/types.scala"
-)
+// FIXME
+wartremoverWarnings ++= Warts.all
+wartremoverErrors in (Compile, compile) := Seq()
 
-scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")
+// scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")

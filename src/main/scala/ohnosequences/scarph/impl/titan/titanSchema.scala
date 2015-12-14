@@ -59,7 +59,7 @@ object titanSchema {
     // TODO: could return something more useful, for example pairs (scarph type, titan key)
     final def createSchema(schema: AnyGraphSchema): Unit = {
 
-      println(s"Creating schema types for ${schema.label}")
+      println(s"  Creating schema types for ${schema.label}")
 
       val propertyKeys = schema.valueTypes map graph.addPropertyKey
       val edgeLabels   = schema.edges      map graph.addEdgeLabel

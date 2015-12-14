@@ -95,14 +95,18 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.categoryStructure._
     val ps = t.evals.propertyStructure(twitterGraph); import ps._
     import queries.propertyStructure._
+    import ohnosequences.cosas.types._
 
-    assert( eval(q_getV)(users)(ps.eval_get[core.TitanVertex, user.age.type]) =~= ages )
-    assert( eval(q_lookupV)(names) =~= users )
-    assert( eval(q_compV)(names) =~= ages )
+    assert { eval(q_getV)(users) =~= ages  }
+    assert { eval(q_lookupV)(names) =~= users }
+    assert { eval(q_compV)(names) =~= ages }
+    assert { eval(q_getE)(postEdges) =~= times }
+    assert { eval(q_lookupE)(times) =~= postEdges }
 
-    assert( eval(q_getE)(postEdges) =~= times )
-    assert( eval(q_lookupE)(times) =~= postEdges )
-    assert( eval(q_compE)(postEdges) =~= postEdges )
+    assert { eval(get(user.name))(users) =~= names }
+    assert { eval(q_compE)(postEdges) =~= postEdges }
+
+    assert { eval( get(user.name) >=> lookup(user.name) >=> get(user.name))(users) =~= names }
   }
 
   test("checking evals for the tensor structure") {
@@ -148,6 +152,15 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     assert( eval(q_outE)(users) =~= tweets )
     assert( eval(q_inE)(tweets) =~= repeated )
     assert( eval(q_compE)(users) =~= repeated )
+
+    assert( eval(outV(posted))(users) =~= tweets )
+    assert( eval(inV(posted))(tweets) =~= repeated )
+    assert( eval(outV(posted) >=> inV(posted))(users) =~= repeated )
+
+    assert( eval(outE(posted) >=> target(posted))(users) =~= tweets )
+    assert( eval(inE(posted) >=> source(posted))(tweets) =~= repeated )
+    assert( eval( (outE(posted) >=> target(posted)) >=> (inE(posted) >=> source(posted)) )(users) =~= repeated )
+
   }
 
   test("checking evals for the predicate structure") {

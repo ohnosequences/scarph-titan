@@ -6,7 +6,7 @@ case object syntax {
   import ohnosequences.cosas.types._
   import ohnosequences.scarph.objects._
 
-  implicit def titanObjectValSyntax[F <: AnyGraphObject, VF <: AnyTitanType](vf: F := VF):
+  implicit def titanObjectValSyntax[F <: AnyGraphObject, VF <: AnyTitanType with F#Raw](vf: F := VF):
     TitanObjectValSyntax[F, VF] =
     TitanObjectValSyntax[F, VF](vf)
 

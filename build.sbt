@@ -9,7 +9,7 @@ scalaVersion        := "2.11.7"
 // crossScalaVersions  := Seq("2.10.6")
 
 val titanVersion = "0.5.4"
-val scarphVersion = "0.3.0"
+val scarphVersion = "0.4.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   "ohnosequences"           %% "cosas"            % "0.8.0",
@@ -32,3 +32,5 @@ testOptions in Test += Tests.Argument("-oD")
 // FIXME
 wartremoverWarnings ++= Warts.all
 wartremoverErrors in (Compile, compile) := Seq()
+
+// scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")

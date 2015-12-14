@@ -78,12 +78,12 @@ case object evals {
 
     type TensorBound = AnyTitanType
     type RawTensor[L <: TensorBound, R <: TensorBound] = Duplet[L, R]
-    type RawUnit = core.TitanGraph
+    type RawUnit = TitanUnit
 
     def tensorRaw[L <: TensorBound, R <: TensorBound](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
     def leftRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): L = t.left
     def rightRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): R = t.right
-    def toUnitRaw[X <: TensorBound](x: X): RawUnit = graph
+    def toUnitRaw[X <: TensorBound](x: X): RawUnit = TitanUnit(graph)
 
     implicit def titanUnitToVertices:
         FromUnit[TitanUnit, TitanVertices] =
@@ -184,24 +184,27 @@ case object evals {
   trait TitanPropertyStructure extends TitanGraph {
 
     implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
-        Eval[Container[E], get[P], Container[P#Value#Raw]] =
-    new Eval[Container[E], get[P], Container[P#Value#Raw]] {
+        Eval[Container[E], get[P], Container[P#Target#Raw]] =
+    new Eval[Container[E], get[P], Container[P#Target#Raw]] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { elements =>
-        elements map { _.getProperty[P#Value#Raw](morph.property.label) }
+        elements map { _.getProperty[P#Target#Raw](morph.relation.label) }
       }
 
       def present(morph: InMorph): Seq[String] = Seq(morph.label)
     }
 
 
-    implicit def eval_lookupV[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyVertex }]:
-        Eval[Container[VT], lookup[P], TitanVertices] =
-    new Eval[Container[VT], lookup[P], TitanVertices] {
+    implicit def eval_lookupV[
+      V,
+      P <: AnyProperty { type Source <: AnyVertex; type Target <: AnyValueType { type Raw >: V }  }
+    ]:
+        Eval[Container[V], lookup[P], TitanVertices] =
+    new Eval[Container[V], lookup[P], TitanVertices] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>
-          graph.query.has(morph.property.label, v)
+          graph.query.has(morph.relation.label, v)
             .vertices.asTitanVertices
         }
       }
@@ -209,13 +212,16 @@ case object evals {
       def present(morph: InMorph): Seq[String] = Seq(morph.label)
     }
 
-    implicit def eval_lookupE[VT, P <: AnyProperty.withRaw[VT] { type Owner <: AnyEdge }]:
-        Eval[Container[VT], lookup[P], TitanEdges] =
-    new Eval[Container[VT], lookup[P], TitanEdges] {
+    implicit def eval_lookupE[
+      V,
+      P <: AnyProperty { type Source <: AnyEdge; type Target <: AnyValueType { type Raw >: V }  }
+    ]:
+        Eval[Container[V], lookup[P], TitanEdges] =
+    new Eval[Container[V], lookup[P], TitanEdges] {
 
       def rawApply(morph: InMorph): InVal => OutVal = { values =>
         values flatMap { v =>
-          graph.query.has(morph.property.label, v)
+          graph.query.has(morph.relation.label, v)
             .edges.asTitanEdges
         }
       }
@@ -253,26 +259,26 @@ case object evals {
   }
 
   trait TitanAfterRewriteEvals {
-    import morphisms._
-
-    implicit final def eval_quantifyOutE[
-      P <: AnyPredicate { type Element <: AnyEdge }
-    ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
-    new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
-        vertices flatMap { v =>
-          addConditions(morph.predicate,
-            v.query
-            .labels(morph.edge.label)
-            .direction(Direction.IN)
-          )
-          .edges.asTitanEdges
-        }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    // import morphisms._
+    //
+    // implicit final def eval_quantifyOutE[
+    //   P <: AnyPredicate { type Element <: AnyEdge }
+    // ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
+    // new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
+    //
+    //   def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
+    //     vertices flatMap { v =>
+    //       addConditions(morph.predicate,
+    //         v.query
+    //         .labels(morph.edge.label)
+    //         .direction(Direction.IN)
+    //       )
+    //       .edges.asTitanEdges
+    //     }
+    //   }
+    //
+    //   def present(morph: InMorph): Seq[String] = Seq(morph.label)
+    // }
 
   }
 

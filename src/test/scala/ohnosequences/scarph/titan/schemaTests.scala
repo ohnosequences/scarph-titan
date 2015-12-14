@@ -19,7 +19,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   // var twitterGraph: titan.TitanGraph = null
   val twitterGraph = core.TitanFactory.open("inmemory")
 
-  override final def beforeAll() {
+  override final def beforeAll() = {
 
     /*
     def cleanDir(f: File) {
@@ -44,7 +44,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     println("Loaded sample Twitter data")
   }
 
-  override final def afterAll() {
+  override final def afterAll() = {
     // NOTE: uncommend if you want to add data to the GraphSON:
     // import com.tinkerpop.blueprints.util.io.graphson._
     // GraphSONWriter.outputGraph(twitterGraph, "graph_compact.json", GraphSONMode.COMPACT)

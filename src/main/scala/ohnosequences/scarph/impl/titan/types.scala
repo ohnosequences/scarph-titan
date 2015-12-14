@@ -12,6 +12,8 @@ case object types {
   case object TitanZero extends AnyTitanType
   type TitanZero = TitanZero.type
 
+  case class TitanUnit(val graph: titan.TitanGraph) extends AnyTitanType
+
 
   trait AnyDuplet extends AnyTitanType {
 
@@ -47,7 +49,6 @@ case object types {
   final type TitanQueries  = Container[blueprints.Query]
 
   final type JIterable[T]  = java.lang.Iterable[T]
-  final type TitanUnit     = titan.TitanGraph
 
 
 

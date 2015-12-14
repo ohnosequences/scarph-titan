@@ -10,7 +10,7 @@ object titanSchema {
   import titan.Multiplicity
 
   import scala.reflect._
-  import scala.reflect.runtime.universe._
+  // import scala.reflect.runtime.universe._
 
   final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity = a.sourceArity match {
 
@@ -34,10 +34,10 @@ object titanSchema {
   final case class TitanGraphSchemaOps(val graph: TitanGraph) extends AnyVal {
 
     final def addPropertyKey(v: AnyValueType): titan.PropertyKey = {
-      println(s"  Creating [${v.label}] property key (${v.rawTag})")
+      println(s"  Creating [${v.label}] property key (${v.valueTag})")
 
       graph.makePropertyKey(v.label)
-        .dataType(v.rawTag.runtimeClass)
+        .dataType(v.valueTag.runtimeClass)
         .make()
     }
 

@@ -6,18 +6,17 @@ organization  := "ohnosequences"
 bucketSuffix  := "era7.com"
 
 scalaVersion        := "2.11.7"
-// crossScalaVersions  := Seq("2.10.6")
 
 val titanVersion = "0.5.4"
-val scarphVersion = "0.4.0-SNAPSHOT"
+val scarphVersion = "0.3.1"
 
 libraryDependencies ++= Seq(
   "ohnosequences"           %% "cosas"            % "0.8.0",
   "com.thinkaurelius.titan" %  "titan-core"       % titanVersion,
-  "com.thinkaurelius.titan" %  "titan-berkeleyje" % titanVersion,
+  "com.thinkaurelius.titan" %  "titan-berkeleyje" % titanVersion % Test,
   "ohnosequences"           %% "scarph"           % scarphVersion,
   "ohnosequences"           %% "scarph"           % scarphVersion % Test classifier "tests",
-  "org.scalatest"           %% "scalatest"        % "2.2.5"       % Test,
+  "org.scalatest"           %% "scalatest"        % "2.2.6"       % Test,
   "org.slf4j"               %  "slf4j-nop"        % "1.7.5"       % Test
   // ^ getting rid of the annoying warning about logging ^
 )
@@ -32,5 +31,3 @@ testOptions in Test += Tests.Argument("-oD")
 // FIXME
 wartremoverWarnings ++= Warts.all
 wartremoverErrors in (Compile, compile) := Seq()
-
-// scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")

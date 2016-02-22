@@ -8,7 +8,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import ohnosequences.{ scarph => s }
   import s.objects._, s.evals._, s.morphisms._
   import s.syntax.objects._, s.syntax.morphisms._
-  import s.test.twitter._, s.test.queries, s.test.asserts._
+  import s.test.twitter._, s.test.queries
 
   import ohnosequences.scarph.impl.{ titan => t }
   import t.evals._, t.types._, t.rewrites._, t.syntax._

@@ -5,7 +5,7 @@ case object types {
   import com.tinkerpop.blueprints
   import com.thinkaurelius.titan.{ core => titan }
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
-  import ohnosequences.scarph._, objects._, evals._
+  import ohnosequences.scarph._, impl._
 
   sealed trait AnyTitanType
 

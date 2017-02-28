@@ -6,8 +6,7 @@ object predicates {
   import com.tinkerpop.blueprints.Compare._
   import com.tinkerpop.blueprints
 
-  import ohnosequences.{ scarph => s}
-  import s.objects._
+  import ohnosequences.scarph._, impl._
 
 
   // extends query with conditions from the predicate

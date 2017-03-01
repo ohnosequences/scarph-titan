@@ -3,8 +3,8 @@ description   := "Scarph evaluators for TitanDB"
 organization  := "ohnosequences"
 bucketSuffix  := "era7.com"
 
-val titanVersion  = "0.5.4"
 val scarphVersion = "0.3.1-9-ge7a794b"
+val titanVersion  = "1.0.0"
 
 libraryDependencies ++= Seq(
   "ohnosequences"           %% "cosas"            % "0.8.0",

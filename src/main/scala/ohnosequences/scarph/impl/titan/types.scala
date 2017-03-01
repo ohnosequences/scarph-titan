@@ -2,7 +2,7 @@ package ohnosequences.scarph.impl.titan
 
 case object types {
 
-  import com.tinkerpop.blueprints
+  import org.apache.tinkerpop.gremlin.{ structure => tinkerpop }
   import com.thinkaurelius.titan.{ core => titan }
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
   import ohnosequences.scarph._, impl._
@@ -46,7 +46,7 @@ case object types {
 
   final type TitanVertices = Container[titan.TitanVertex]
   final type TitanEdges    = Container[titan.TitanEdge]
-  final type TitanQueries  = Container[blueprints.Query]
+  final type TitanQueries  = Container[tinkerpop.Query]
 
   final type JIterable[T]  = java.lang.Iterable[T]
 
@@ -54,19 +54,19 @@ case object types {
 
   /* Conversions */
 
-  implicit final def blueprintsVerticesOps(es: JIterable[blueprints.Vertex]):
-    BlueprintsVerticesOps =
-    BlueprintsVerticesOps(es)
-  case class BlueprintsVerticesOps(val es: JIterable[blueprints.Vertex]) extends AnyVal {
+  implicit final def tinkerpopVerticesOps(es: JIterable[tinkerpop.Vertex]):
+    TinkerpopVerticesOps =
+    TinkerpopVerticesOps(es)
+  case class TinkerpopVerticesOps(val es: JIterable[tinkerpop.Vertex]) extends AnyVal {
 
     final def asTitanVertices: Iterable[titan.TitanVertex] =
       es.asScala map { x => x.asInstanceOf[titan.TitanVertex] }
   }
 
-  implicit final def blueprintsEdgesOps(es: JIterable[blueprints.Edge]):
-    BlueprintsEdgesOps =
-    BlueprintsEdgesOps(es)
-  case class BlueprintsEdgesOps(val es: JIterable[blueprints.Edge]) extends AnyVal {
+  implicit final def tinkerpopEdgesOps(es: JIterable[tinkerpop.Edge]):
+    TinkerpopEdgesOps =
+    TinkerpopEdgesOps(es)
+  case class TinkerpopEdgesOps(val es: JIterable[tinkerpop.Edge]) extends AnyVal {
 
     final def asTitanEdges: Iterable[titan.TitanEdge] =
       es.asScala map { x => x.asInstanceOf[titan.TitanEdge] }

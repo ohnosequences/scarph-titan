@@ -9,8 +9,7 @@ case object evals {
   import ohnosequences.scarph._, impl._
 
   import com.thinkaurelius.titan.core
-  import com.tinkerpop.blueprints
-  import com.tinkerpop.blueprints.Direction
+  import org.apache.tinkerpop.gremlin.structure.Direction;
 
 
   trait TitanCategoryStructure extends DaggerCategory
@@ -29,7 +28,7 @@ case object evals {
           _.query
             .labels(edge.label)
             .direction(Direction.OUT)
-            .vertexIds.asScala
+            .vertices.asScala
         }
       )
     def raw_inV(edge: AnyEdge)(v: RawTarget): RawSource =
@@ -38,7 +37,7 @@ case object evals {
           _.query
             .labels(edge.label)
             .direction(Direction.IN)
-            .vertexIds.asScala
+            .vertices.asScala
         }
       )
 
@@ -48,10 +47,10 @@ case object evals {
         _.query
           .labels(edge.label)
           .direction(Direction.OUT)
-          .titanEdges.asScala
+          .edges.asScala
       }
     def raw_source(edge: AnyEdge)(e: RawEdge): RawSource =
-      e map { _.getVertex(Direction.OUT) }
+      e map { _.vertex(Direction.OUT) }
 
 
     def raw_inE(edge: AnyEdge)(v: RawTarget): RawEdge =
@@ -59,10 +58,10 @@ case object evals {
         _.query
           .labels(edge.label)
           .direction(Direction.IN)
-          .titanEdges.asScala
+          .edges.asScala
       }
     def raw_target(edge: AnyEdge)(e: RawEdge): RawTarget =
-      e map { _.getVertex(Direction.IN) }
+      e map { _.vertex(Direction.IN) }
 
   }
 
@@ -92,7 +91,7 @@ case object evals {
       def raw_apply(morph: InMorph): RawInput => RawOutput = { raw_input: RawInput =>
 
         Container(graph.query.has("label", morph.obj.label)
-          .vertices.asTitanVertices)
+          .vertices.asScala)
       }
 
       def present(morph: InMorph): Seq[String] = Seq(morph.label)
@@ -106,7 +105,7 @@ case object evals {
       def raw_apply(morph: InMorph): RawInput => RawOutput = { raw_input: RawInput =>
 
         Container(graph.query.has("label", morph.obj.label)
-          .edges.asTitanEdges)
+          .edges.asScala)
       }
 
       def present(morph: InMorph): Seq[String] = Seq(morph.label)
@@ -195,7 +194,7 @@ case object evals {
     new Eval[Container[E], get[P], Container[P#Target#Val]] {
 
       def raw_apply(morph: InMorph): RawInput => RawOutput = { elements =>
-        elements map { _.getProperty[P#Target#Val](morph.relation.label) }
+        elements map { _.property[P#Target#Val](morph.relation.label).value }
       }
 
       def present(morph: InMorph): Seq[String] = Seq(morph.label)
@@ -215,7 +214,7 @@ case object evals {
       def raw_apply(morph: InMorph): RawInput => RawOutput = { values =>
         values flatMap { v =>
           graph.query.has(morph.relation.label, v)
-            .vertices.asTitanVertices
+            .vertices.asScala
         }
       }
 
@@ -235,7 +234,7 @@ case object evals {
       def raw_apply(morph: InMorph): RawInput => RawOutput = { values =>
         values flatMap { v =>
           graph.query.has(morph.relation.label, v)
-            .edges.asTitanEdges
+            .edges.asScala
         }
       }
 
@@ -253,7 +252,7 @@ case object evals {
       def raw_apply(morph: InMorph): RawInput => RawOutput = { values =>
         values flatMap { v =>
           graph.query.has(morph.relation.label, v)
-            .edges.asTitanEdges
+            .edges.asScala
         }
       }
 
@@ -305,7 +304,7 @@ case object evals {
     //         .labels(morph.edge.label)
     //         .direction(Direction.IN)
     //       )
-    //       .edges.asTitanEdges
+    //       .edges
     //     }
     //   }
     //

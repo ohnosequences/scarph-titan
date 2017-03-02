@@ -27,3 +27,11 @@ testOptions in Test += Tests.Argument("-oD")
 // FIXME
 wartremoverWarnings ++= Warts.all
 wartremoverErrors in (Compile, compile) := Seq()
+wartremoverErrors in (Test,    compile) := Seq()
+
+
+
+// libraryDependencies += "com.tinkerpop.blueprints" % "blueprints-core" % "2.5.0"
+// conflictManager := ConflictManager.default
+// libraryDependencies += "com.lihaoyi" % "ammonite" % "0.8.2" cross CrossVersion.full
+// initialCommands in (Compile, console) := """ammonite.Main().run()"""

@@ -9,6 +9,7 @@ object predicates {
 
 
   // TODO: AnyCondition can be converted to PredicateCondition, then AnyPredicate can be converted to an And combination of its condition
+  // See http://titan.thinkaurelius.com/javadoc/current/com/thinkaurelius/titan/graphdb/query/condition/Condition.html
 
   // evaluates conjunction of all predicate's conditions on a given titan element
   def evalPredicate[P <: AnyPredicate, TE <: titan.TitanElement](predicate: P, elem: TE): Boolean = {

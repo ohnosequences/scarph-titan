@@ -46,7 +46,6 @@ case object types {
 
   final type TitanVertices = Container[titan.TitanVertex]
   final type TitanEdges    = Container[titan.TitanEdge]
-  final type TitanQueries  = Container[tinkerpop.Query]
 
   final type JIterable[T]  = java.lang.Iterable[T]
 

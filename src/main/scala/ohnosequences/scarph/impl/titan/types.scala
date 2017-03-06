@@ -12,10 +12,10 @@ case object types {
   case object TitanZero extends AnyTitanType
   type TitanZero = TitanZero.type
 
-  case class TitanUnit(val graph: titan.TitanGraph) extends AnyTitanType
+  final case class TitanUnit(val graph: titan.TitanGraph) extends AnyTitanType
 
 
-  trait AnyDuplet extends AnyTitanType {
+  sealed trait AnyDuplet extends AnyTitanType {
 
     type Left <: AnyTitanType
     val  left: Left
@@ -24,13 +24,13 @@ case object types {
     val  right: Right
   }
 
-  case class Duplet[L <: AnyTitanType, R <: AnyTitanType](val left: L, val right: R) extends AnyDuplet {
+  final case class Duplet[L <: AnyTitanType, R <: AnyTitanType](val left: L, val right: R) extends AnyDuplet {
 
     type Left = L
     type Right = R
   }
 
-  trait AnyContainer extends AnyTitanType {
+  sealed trait AnyContainer extends AnyTitanType {
 
     type Inside
     type Values = Iterable[Inside]
@@ -41,34 +41,9 @@ case object types {
     def filter(f: Inside => Boolean): Container[Inside] = Container(values.filter(f))
   }
 
-  case class Container[T](val values: Iterable[T]) extends AnyContainer { type Inside = T }
-
+  final case class Container[T](val values: Iterable[T]) extends AnyContainer { type Inside = T }
 
   final type TitanVertices = Container[titan.TitanVertex]
   final type TitanEdges    = Container[titan.TitanEdge]
-
-  final type JIterable[T]  = java.lang.Iterable[T]
-
-
-
-  /* Conversions */
-
-  implicit final def tinkerpopVerticesOps(es: JIterable[tinkerpop.Vertex]):
-    TinkerpopVerticesOps =
-    TinkerpopVerticesOps(es)
-  case class TinkerpopVerticesOps(val es: JIterable[tinkerpop.Vertex]) extends AnyVal {
-
-    final def asTitanVertices: Iterable[titan.TitanVertex] =
-      es.asScala map { x => x.asInstanceOf[titan.TitanVertex] }
-  }
-
-  implicit final def tinkerpopEdgesOps(es: JIterable[tinkerpop.Edge]):
-    TinkerpopEdgesOps =
-    TinkerpopEdgesOps(es)
-  case class TinkerpopEdgesOps(val es: JIterable[tinkerpop.Edge]) extends AnyVal {
-
-    final def asTitanEdges: Iterable[titan.TitanEdge] =
-      es.asScala map { x => x.asInstanceOf[titan.TitanEdge] }
-  }
 
 }

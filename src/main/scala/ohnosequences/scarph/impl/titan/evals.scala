@@ -186,7 +186,6 @@ case object evals {
 
   }
 
-
   trait TitanPropertyStructure extends TitanGraph {
 
     implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
@@ -313,7 +312,7 @@ case object evals {
 
   }
 
-
+  // NOTE: these separate "modules" are useful for testing
   case object categoryStructure extends TitanCategoryStructure
   case object graphStructure extends TitanGraphStructure
   case class  tensorStructure(val graph: core.TitanGraphTransaction) extends TitanTensorStructure
@@ -321,7 +320,7 @@ case object evals {
   case class  propertyStructure(val graph: core.TitanGraphTransaction) extends TitanPropertyStructure
   case object predicateStructure extends TitanPredicateStructure
 
-  case class all(val graph: core.TitanGraphTransaction) extends
+  case class titanScarph(val graph: core.TitanGraphTransaction) extends
     TitanCategoryStructure with
     TitanGraphStructure with
     TitanTensorStructure with

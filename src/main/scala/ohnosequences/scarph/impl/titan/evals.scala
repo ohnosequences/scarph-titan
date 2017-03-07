@@ -69,7 +69,7 @@ case object evals {
 
   trait TitanGraph {
 
-    val graph: core.TitanGraph
+    val graph: core.TitanGraphTransaction
   }
 
   trait TitanTensorStructure extends Tensors with TitanGraph {
@@ -316,12 +316,12 @@ case object evals {
 
   case object categoryStructure extends TitanCategoryStructure
   case object graphStructure extends TitanGraphStructure
-  case class  tensorStructure(val graph: core.TitanGraph) extends TitanTensorStructure
+  case class  tensorStructure(val graph: core.TitanGraphTransaction) extends TitanTensorStructure
   case object biproductStructure extends TitanBiproductStructure
-  case class  propertyStructure(val graph: core.TitanGraph) extends TitanPropertyStructure
+  case class  propertyStructure(val graph: core.TitanGraphTransaction) extends TitanPropertyStructure
   case object predicateStructure extends TitanPredicateStructure
 
-  case class all(val graph: core.TitanGraph) extends
+  case class all(val graph: core.TitanGraphTransaction) extends
     TitanCategoryStructure with
     TitanGraphStructure with
     TitanTensorStructure with

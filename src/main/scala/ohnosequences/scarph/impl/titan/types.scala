@@ -3,7 +3,7 @@ package ohnosequences.scarph.impl.titan
 case object types {
 
   import org.apache.tinkerpop.gremlin.{ structure => tinkerpop }
-  import com.thinkaurelius.titan.{ core => titan }
+  import com.thinkaurelius.titan.core
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
   import ohnosequences.scarph._, impl._
 
@@ -12,7 +12,7 @@ case object types {
   case object TitanZero extends AnyTitanType
   type TitanZero = TitanZero.type
 
-  final case class TitanUnit(val graph: titan.TitanGraph) extends AnyTitanType
+  final case class TitanUnit(val graph: core.TitanGraphTransaction) extends AnyTitanType
 
 
   sealed trait AnyDuplet extends AnyTitanType {
@@ -43,7 +43,7 @@ case object types {
 
   final case class Container[T](val values: Iterable[T]) extends AnyContainer { type Inside = T }
 
-  final type TitanVertices = Container[titan.TitanVertex]
-  final type TitanEdges    = Container[titan.TitanEdge]
+  final type TitanVertices = Container[core.TitanVertex]
+  final type TitanEdges    = Container[core.TitanEdge]
 
 }

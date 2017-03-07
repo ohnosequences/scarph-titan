@@ -2,8 +2,7 @@ package ohnosequences.scarph.impl.titan
 
 object morphisms {
 
-  import ohnosequences.{ scarph => s}
-  import s.objects._, s.morphisms._
+  import ohnosequences.scarph._, impl._
 
 
   case class quantifyOutE[P <: AnyPredicate { type Element <: AnyEdge }]

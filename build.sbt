@@ -1,14 +1,10 @@
-Nice.scalaProject
-
 name          := "scarph-titan"
 description   := "Scarph evaluators for TitanDB"
 organization  := "ohnosequences"
 bucketSuffix  := "era7.com"
 
-scalaVersion        := "2.11.7"
-
-val titanVersion = "0.5.4"
-val scarphVersion = "0.3.1"
+val scarphVersion = "0.3.1-13-g45d8eb6"
+val titanVersion  = "1.0.0"
 
 libraryDependencies ++= Seq(
   "ohnosequences"           %% "cosas"            % "0.8.0",
@@ -16,7 +12,7 @@ libraryDependencies ++= Seq(
   "com.thinkaurelius.titan" %  "titan-berkeleyje" % titanVersion % Test,
   "ohnosequences"           %% "scarph"           % scarphVersion,
   "ohnosequences"           %% "scarph"           % scarphVersion % Test classifier "tests",
-  "org.scalatest"           %% "scalatest"        % "2.2.6"       % Test,
+  "org.scalatest"           %% "scalatest"        % "3.0.1"       % Test,
   "org.slf4j"               %  "slf4j-nop"        % "1.7.5"       % Test
   // ^ getting rid of the annoying warning about logging ^
 )
@@ -29,5 +25,13 @@ testOptions in Test += Tests.Argument("-oD")
 // scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")
 
 // FIXME
-wartremoverWarnings ++= Warts.all
+// wartremoverWarnings ++= Warts.all
 wartremoverErrors in (Compile, compile) := Seq()
+wartremoverErrors in (Test,    compile) := Seq()
+
+
+
+// libraryDependencies += "com.tinkerpop.blueprints" % "blueprints-core" % "2.5.0"
+// conflictManager := ConflictManager.default
+// libraryDependencies += "com.lihaoyi" % "ammonite" % "0.8.2" cross CrossVersion.full
+// initialCommands in (Compile, console) := """ammonite.Main().run()"""

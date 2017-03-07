@@ -1,17 +1,17 @@
 package ohnosequences.scarph.impl.titan.test
 
 import com.thinkaurelius.titan.core
+import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
 
 
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {
 
-  import ohnosequences.{ scarph => s }
-  import s.objects._, s.evals._, s.morphisms._
-  import s.syntax.objects._, s.syntax.morphisms._
-  import s.test.twitter._, s.test.queries
+  import ohnosequences.scarph._, impl._, syntax._
+  import ohnosequences.scarph.test.twitter._
+  import ohnosequences.scarph.test.queries
 
   import ohnosequences.scarph.impl.{ titan => t }
-  import t.evals._, t.types._, t.rewrites._, t.syntax._
+  import t.evals._, t.types._, t.syntax._ // , t.rewrites._
 
   import java.io.File
 
@@ -36,10 +36,16 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import ohnosequences.scarph.impl.titan.titanSchema._
     import ohnosequences.scarph.test._
 
-    // twitterGraph.createSchema(twitter)
+    twitterGraph.createSchema(twitter)
 
-    import com.tinkerpop.blueprints.util.io.graphson._
-    GraphSONReader.inputGraph(twitterGraph, this.getClass.getResource("/twitter_graph.json").getPath)
+    // FIXME: old code for loading test graph doesn't work, because of incompatible Titan, new code doesn't work because of incompatible GraphSON format
+    // import com.tinkerpop.blueprints.util.io.graphson._
+    // GraphSONReader.inputGraph(twitterGraph, this.getClass.getResource("/twitter_graph.json").getPath)
+    import org.apache.tinkerpop.gremlin.structure.io.graphson._
+    GraphSONReader.build().create().readGraph(
+      this.getClass.getResourceAsStream("/twitter_graph.json"),
+      twitterGraph
+    )
 
     println("Loaded sample Twitter data")
   }
@@ -49,7 +55,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     // import com.tinkerpop.blueprints.util.io.graphson._
     // GraphSONWriter.outputGraph(twitterGraph, "graph_compact.json", GraphSONMode.COMPACT)
 
-    twitterGraph.shutdown
+    twitterGraph.close()
     println("Shutdown Titan graph")
   }
 
@@ -59,10 +65,10 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val nousers = user := Container[core.TitanVertex](Iterable())
 
     def vertices[V <: AnyVertex](v: V): V := TitanVertices =
-      v := Container(twitterGraph.query.has("type", v.label).vertices.asTitanVertices)
+      v := Container(twitterGraph.query.has("type", v.label).vertices.asScala)
 
     def edges[E <: AnyEdge](e: E): E := TitanEdges =
-      e := Container(twitterGraph.query.has("label", e.label).edges.asTitanEdges)
+      e := Container(twitterGraph.query.has("label", e.label).edges.asScala)
 
     val users = vertices(user)
     val tweets = vertices(tweet)
@@ -86,9 +92,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.categoryStructure._
     import queries.categoryStructure._
 
-    assert( eval(q_id)(users) =~= users )
-    assert( eval(q_comp1)(users) =~= users )
-    assert( eval(q_comp2)(users) =~= users )
+    assert( evaluate(q_id)(users) =~= users )
+    assert( evaluate(q_comp1)(users) =~= users )
+    assert( evaluate(q_comp2)(users) =~= users )
   }
 
   test("checking evals for the property structure") {
@@ -97,16 +103,16 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import queries.propertyStructure._
     import ohnosequences.cosas.types._
 
-    assert { eval(q_getV)(users) =~= ages  }
-    assert { eval(q_lookupV)(names) =~= users }
-    assert { eval(q_compV)(names) =~= ages }
-    assert { eval(q_getE)(postEdges) =~= times }
-    assert { eval(q_lookupE)(times) =~= postEdges }
+    assert { evaluate(q_getV)(users) =~= ages  }
+    assert { evaluate(q_lookupV)(names) =~= users }
+    assert { evaluate(q_compV)(names) =~= ages }
+    assert { evaluate(q_getE)(postEdges) =~= times }
+    assert { evaluate(q_lookupE)(times) =~= postEdges }
 
-    assert { eval(get(user.name))(users) =~= names }
-    assert { eval(q_compE)(postEdges) =~= postEdges }
+    assert { evaluate(get(user.name))(users) =~= names }
+    assert { evaluate(q_compE)(postEdges) =~= postEdges }
 
-    assert { eval( get(user.name) >=> lookup(user.name) >=> get(user.name))(users) =~= names }
+    assert { evaluate( get(user.name) >=> lookup(user.name) >=> get(user.name))(users) =~= names }
   }
 
   test("checking evals for the tensor structure") {
@@ -114,10 +120,10 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val ts = t.evals.tensorStructure(twitterGraph); import ts._
     import queries.tensorStructure._
 
-    assert( eval(q_tensor)(users ⊗ users ⊗ users) =~= (users ⊗ users ⊗ users) )
-    assert( eval(q_dupl)(users ⊗ users) =~= (users ⊗ users ⊗ users) )
-    assert( eval(q_match)(users ⊗ users) =~= users )
-    assert( eval(q_comp)(users ⊗ users) =~= users )
+    assert( evaluate(q_tensor)(users ⊗ users ⊗ users) =~= (users ⊗ users ⊗ users) )
+    assert( evaluate(q_dupl)(users ⊗ users) =~= (users ⊗ users ⊗ users) )
+    assert( evaluate(q_match)(users ⊗ users) =~= users )
+    assert( evaluate(q_comp)(users ⊗ users) =~= users )
   }
 
   test("checking evals for the biproduct structure") {
@@ -125,13 +131,13 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     import t.evals.biproductStructure._
     import queries.biproductStructure._
 
-    assert( eval(q_inj)(tweets) =~= (nousers ⊕ nousers ⊕ tweets) )
-    assert( eval(q_bip)(users ⊕ users ⊕ tweets) =~= (users ⊕ users ⊕ tweets) )
-    assert( eval(q_fork)(users ⊕ tweets) =~= (users ⊕ users ⊕ tweets) )
-    assert( eval(q_merge)(users ⊕ users) =~=
+    assert( evaluate(q_inj)(tweets) =~= (nousers ⊕ nousers ⊕ tweets) )
+    assert( evaluate(q_bip)(users ⊕ users ⊕ tweets) =~= (users ⊕ users ⊕ tweets) )
+    assert( evaluate(q_fork)(users ⊕ tweets) =~= (users ⊕ users ⊕ tweets) )
+    assert( evaluate(q_merge)(users ⊕ users) =~=
       (user := Container(users.value.values ++ users.value.values))
     )
-    assert( eval(q_comp)(users ⊕ tweets) =~=
+    assert( evaluate(q_comp)(users ⊕ tweets) =~=
       (tweet := Container(tweets.value.values ++ tweets.value.values))
     )
   }
@@ -145,21 +151,21 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
       Iterable(edu, edu, edu, edu, alexey, alexey, kim, kim, kim)
     )
 
-    assert( eval(q_outV)(users) =~= tweets )
-    assert( eval(q_inV)(tweets) =~= repeated )
-    assert( eval(q_compV)(users) =~= repeated )
+    assert( evaluate(q_outV)(users) =~= tweets )
+    assert( evaluate(q_inV)(tweets) =~= repeated )
+    assert( evaluate(q_compV)(users) =~= repeated )
 
-    assert( eval(q_outE)(users) =~= tweets )
-    assert( eval(q_inE)(tweets) =~= repeated )
-    assert( eval(q_compE)(users) =~= repeated )
+    assert( evaluate(q_outE)(users) =~= tweets )
+    assert( evaluate(q_inE)(tweets) =~= repeated )
+    assert( evaluate(q_compE)(users) =~= repeated )
 
-    assert( eval(outV(posted))(users) =~= tweets )
-    assert( eval(inV(posted))(tweets) =~= repeated )
-    assert( eval(outV(posted) >=> inV(posted))(users) =~= repeated )
+    assert( evaluate(outV(posted))(users) =~= tweets )
+    assert( evaluate(inV(posted))(tweets) =~= repeated )
+    assert( evaluate(outV(posted) >=> inV(posted))(users) =~= repeated )
 
-    assert( eval(outE(posted) >=> target(posted))(users) =~= tweets )
-    assert( eval(inE(posted) >=> source(posted))(tweets) =~= repeated )
-    assert( eval( (outE(posted) >=> target(posted)) >=> (inE(posted) >=> source(posted)) )(users) =~= repeated )
+    assert( evaluate(outE(posted) >=> target(posted))(users) =~= tweets )
+    assert( evaluate(inE(posted) >=> source(posted))(tweets) =~= repeated )
+    assert( evaluate( (outE(posted) >=> target(posted)) >=> (inE(posted) >=> source(posted)) )(users) =~= repeated )
 
   }
 
@@ -170,9 +176,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     val filtered = Container[core.TitanVertex](Iterable(edu, kim))
 
-    assert( eval(q_quant)(users) =~= (pred := filtered) )
-    assert( eval(q_coerce)(pred := filtered) =~= (user := filtered) )
-    assert( eval(q_comp)(users) =~= (user := filtered) )
+    assert( evaluate(q_quant)(users) =~= (pred := filtered) )
+    assert( evaluate(q_coerce)(pred := filtered) =~= (user := filtered) )
+    assert( evaluate(q_comp)(users) =~= (user := filtered) )
   }
 
 }

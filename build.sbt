@@ -3,7 +3,7 @@ description   := "Scarph evaluators for TitanDB"
 organization  := "ohnosequences"
 bucketSuffix  := "era7.com"
 
-val scarphVersion = "0.3.1-9-ge7a794b"
+val scarphVersion = "0.3.1+"
 val titanVersion  = "1.0.0"
 
 libraryDependencies ++= Seq(
@@ -25,7 +25,7 @@ testOptions in Test += Tests.Argument("-oD")
 // scalacOptions ++= Seq("-optimise", "-Yinline", "-Yinline-warnings")
 
 // FIXME
-wartremoverWarnings ++= Warts.all
+// wartremoverWarnings ++= Warts.all
 wartremoverErrors in (Compile, compile) := Seq()
 wartremoverErrors in (Test,    compile) := Seq()
 

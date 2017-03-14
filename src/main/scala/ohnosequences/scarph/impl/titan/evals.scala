@@ -85,31 +85,19 @@ case object evals {
 
     implicit final def eval_fromUnitV[
       T <: AnyVertex
-    ]:  Eval[RawUnit, fromUnit[T], TitanVertices] =
-    new Eval[RawUnit, fromUnit[T], TitanVertices] {
+    ]:  Eval[fromUnit[T], RawUnit, TitanVertices] =
+    new Eval( morph => raw_input =>
 
-      def raw_apply(morph: InMorph): RawInput => RawOutput = { raw_input: RawInput =>
-
-        Container(graph.query.has("label", morph.obj.label)
-          .vertices.asScala)
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+      Container(graph.query.has("label", morph.obj.label).vertices.asScala)
+    )
 
     implicit final def eval_fromUnitE[
       T <: AnyEdge
-    ]:  Eval[RawUnit, fromUnit[T], TitanEdges] =
-    new Eval[RawUnit, fromUnit[T], TitanEdges] {
+    ]:  Eval[fromUnit[T], RawUnit, TitanEdges] =
+    new Eval( morph => raw_input =>
 
-      def raw_apply(morph: InMorph): RawInput => RawOutput = { raw_input: RawInput =>
-
-        Container(graph.query.has("label", morph.obj.label)
-          .edges.asScala)
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+      Container(graph.query.has("label", morph.obj.label).edges.asScala)
+    )
 
     implicit def containerMatch[X]:
         Matchable[Container[X]] =
@@ -149,27 +137,28 @@ case object evals {
     def raw_toZero[X <: BiproductBound](x: X): RawZero = TitanZero
 
     implicit def verticesZero[V <: AnyVertex]:
-        ZeroFor[V, TitanVertices] =
-    new ZeroFor[V, TitanVertices] { def zero(o: Obj): T = Container[core.TitanVertex](Iterable()) }
+        RawFromZero[V, TitanVertices] =
+    new RawFromZero[V, TitanVertices] { def apply(o: V): TitanVertices = Container[core.TitanVertex](Iterable()) }
 
     implicit def edgesZero[E <: AnyEdge]:
-        ZeroFor[E, TitanEdges] =
-    new ZeroFor[E, TitanEdges] { def zero(o: Obj): T = Container[core.TitanEdge](Iterable()) }
+        RawFromZero[E, TitanEdges] =
+    new RawFromZero[E, TitanEdges] { def apply(o: E): TitanEdges = Container[core.TitanEdge](Iterable()) }
 
     implicit def valuesZero[VT <: AnyValueType]:
-        ZeroFor[VT, Container[VT#Val]] =
-    new ZeroFor[VT, Container[VT#Val]] { def zero(o: Obj): T = Container[VT#Val](Iterable()) }
+        RawFromZero[VT, Container[VT#Val]] =
+    new RawFromZero[VT, Container[VT#Val]] { def apply(o: VT): Container[VT#Val] = Container[VT#Val](Iterable()) }
 
-    implicit def predicatesZero[P <: AnyPredicate, E](implicit elem: ZeroFor[P#Element, E]):
-        ZeroFor[P, E] =
-    new ZeroFor[P, E] { def zero(o: Obj): T = elem.zero(o.element) }
+    implicit def predicatesZero[P <: AnyPredicate, E](implicit
+      elem_fromZero: RawFromZero[P#Element, E]
+    ):  RawFromZero[P, E] =
+    new RawFromZero[P, E] { def apply(o: P): E = elem_fromZero(o.element) }
 
 
     implicit def containerMerge[X]:
         RawMerge[Container[X]] =
     new RawMerge[Container[X]] {
 
-      def apply(l: T, r: T): T =
+      def apply(l: Container[X], r: Container[X]): Container[X] =
         Container( l.values ++ r.values )
     }
 
@@ -178,7 +167,7 @@ case object evals {
     ):  RawMerge[Duplet[X, X]] =
     new RawMerge[Duplet[X, X]] {
 
-      def apply(l: T, r: T): T = Duplet(
+      def apply(l: Duplet[X, X], r: Duplet[X, X]): Duplet[X, X] = Duplet(
         raw_merge(l.left, r.left),
         raw_merge(l.right, r.right)
       )
@@ -189,15 +178,10 @@ case object evals {
   trait TitanPropertyStructure extends TitanGraph {
 
     implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
-        Eval[Container[E], get[P], Container[P#Target#Val]] =
-    new Eval[Container[E], get[P], Container[P#Target#Val]] {
-
-      def raw_apply(morph: InMorph): RawInput => RawOutput = { elements =>
-        elements map { _.property[P#Target#Val](morph.relation.label).value }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+        Eval[get[P], Container[E], Container[P#Target#Val]] =
+    new Eval( morph => elements =>
+      elements map { _.property[P#Target#Val](morph.relation.label).value }
+    )
 
 
     implicit def eval_lookupV[
@@ -206,19 +190,13 @@ case object evals {
         type Source <: AnyVertex
         type Target <: AnyValueType { type Val = V }
       }
-    ]:
-        Eval[Container[V], lookup[P], TitanVertices] =
-    new Eval[Container[V], lookup[P], TitanVertices] {
-
-      def raw_apply(morph: InMorph): RawInput => RawOutput = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.relation.label, v)
-            .vertices.asScala
-        }
+    ]:  Eval[lookup[P], Container[V], TitanVertices] =
+    new Eval( morph => values =>
+      values flatMap { v =>
+        graph.query.has(morph.relation.label, v)
+          .vertices.asScala
       }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    )
 
     implicit def eval_lookupE[
       V,
@@ -226,38 +204,25 @@ case object evals {
         type Source <: AnyEdge
         type Target <: AnyValueType { type Val = V }
       }
-    ]:
-        Eval[Container[V], lookup[P], TitanEdges] =
-    new Eval[Container[V], lookup[P], TitanEdges] {
-
-      def raw_apply(morph: InMorph): RawInput => RawOutput = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.relation.label, v)
-            .edges.asScala
-        }
+    ]:  Eval[lookup[P], Container[V], TitanEdges] =
+    new Eval( morph => values =>
+      values flatMap { v =>
+        graph.query.has(morph.relation.label, v)
+          .edges.asScala
       }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    )
 
     implicit def eval_lookupE_Alt[
       P <: AnyProperty {
         type Source <: AnyEdge;
       }
-    ]
-    :   Eval[Container[P#Target#Val], inV[P], TitanEdges] =
-    new Eval[Container[P#Target#Val], inV[P], TitanEdges] {
-
-      def raw_apply(morph: InMorph): RawInput => RawOutput = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.relation.label, v)
-            .edges.asScala
-        }
+    ]:  Eval[inV[P], Container[P#Target#Val], TitanEdges] =
+    new Eval( morph => values =>
+      values flatMap { v =>
+        graph.query.has(morph.relation.label, v)
+          .edges.asScala
       }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
-
+    )
 
   }
 
@@ -265,26 +230,16 @@ case object evals {
 
     implicit final def eval_quantify[
       P <: AnyPredicate, E <: core.TitanElement
-    ]:  Eval[Container[E], quantify[P], Container[E]] =
-    new Eval[Container[E], quantify[P], Container[E]] {
-
-      def raw_apply(morph: InMorph): RawInput => RawOutput = { elements =>
-        elements filter { evalPredicate(morph.predicate, _) }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    ]:  Eval[quantify[P], Container[E], Container[E]] =
+    new Eval( morph => elements =>
+      elements filter { evalPredicate(morph.predicate, _) }
+    )
 
 
     implicit final def eval_coerce[
       P <: AnyPredicate, E <: core.TitanElement
-    ]:  Eval[Container[E], coerce[P], Container[E]] =
-    new Eval[Container[E], coerce[P], Container[E]] {
-
-      def raw_apply(morph: InMorph): RawInput => RawOutput = x => x
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    ]:  Eval[coerce[P], Container[E], Container[E]] =
+    new Eval( _ => identity)
 
   }
 
@@ -293,10 +248,10 @@ case object evals {
     //
     // implicit final def eval_quantifyOutE[
     //   P <: AnyPredicate { type Element <: AnyEdge }
-    // ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
-    // new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
+    // ]:  Eval[quantifyOutE[P], TitanVertices, TitanEdges] =
+    // new Eval[quantifyOutE[P], TitanVertices, TitanEdges] {
     //
-    //   def raw_apply(morph: InMorph): RawInput => RawOutput = { vertices =>
+    //   morph => vertices =>
     //     vertices flatMap { v =>
     //       addConditions(morph.predicate,
     //         v.query

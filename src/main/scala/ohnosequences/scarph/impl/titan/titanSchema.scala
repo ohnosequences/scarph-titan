@@ -13,16 +13,16 @@ object titanSchema {
 
   final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity = a.sourceArity match {
 
-    case OneOrNone(_) | ExactlyOne(_)   => a.targetArity match {
+    case oneOrNone(_) | exactlyOne(_)   => a.targetArity match {
 
-      case OneOrNone(_)  | ExactlyOne(_)  => Multiplicity.ONE2ONE
-      case AtLeastOne(_) | ManyOrNone(_)  => Multiplicity.ONE2MANY
+      case oneOrNone(_)  | exactlyOne(_)  => Multiplicity.ONE2ONE
+      case atLeastOne(_) | manyOrNone(_)  => Multiplicity.ONE2MANY
     }
 
-    case AtLeastOne(_) | ManyOrNone(_)  => a.targetArity match {
+    case atLeastOne(_) | manyOrNone(_)  => a.targetArity match {
 
-      case OneOrNone(_)  | ExactlyOne(_)  => Multiplicity.MANY2ONE
-      case AtLeastOne(_) | ManyOrNone(_)  => Multiplicity.MULTI
+      case oneOrNone(_)  | exactlyOne(_)  => Multiplicity.MANY2ONE
+      case atLeastOne(_) | manyOrNone(_)  => Multiplicity.MULTI
     }
   }
 

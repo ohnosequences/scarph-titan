@@ -11,7 +11,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   import ohnosequences.scarph.test.queries
 
   import ohnosequences.scarph.impl.{ titan => t }
-  import t.evals._, t.types._, t.syntax._ // , t.rewrites._
+  import t.evals._, t.types._, t.syntax._, t.writes._
 
   import java.io.File
 

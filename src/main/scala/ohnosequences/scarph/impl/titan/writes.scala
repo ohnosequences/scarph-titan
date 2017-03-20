@@ -2,10 +2,10 @@ package ohnosequences.scarph.impl.titan
 
 import org.apache.tinkerpop.gremlin.structure.{ Property => TProperty }
 import com.thinkaurelius.titan.core.{
-  TitanGraphTransaction => TGraph,
-  TitanVertex           => TVertex,
-  TitanEdge             => TEdge,
-  TitanElement          => TElement
+  TitanTransaction => TGraph,
+  TitanVertex      => TVertex,
+  TitanEdge        => TEdge,
+  TitanElement     => TElement
 }
 import ohnosequences.scarph._
 import ohnosequences.scarph.impl.titan.types._

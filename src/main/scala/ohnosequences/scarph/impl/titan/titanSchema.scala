@@ -6,7 +6,7 @@ object titanSchema {
   import com.thinkaurelius.titan.{ core => titan }
   import titan.TitanGraph
   import titan.schema.SchemaManager
-  import titan.Multiplicity
+  import titan.{ Multiplicity, Cardinality }
 
   import scala.reflect._
   // import scala.reflect.runtime.universe._
@@ -34,6 +34,7 @@ object titanSchema {
       println(s"  Creating [${v.label}] property key (${v.valueTag})")
 
       manager.makePropertyKey(v.label)
+        .cardinality( Cardinality.SINGLE )
         .dataType(v.valueTag.runtimeClass)
         .make()
     }
@@ -42,6 +43,7 @@ object titanSchema {
       println(s"  Creating [${e.label}] edge label")
 
       manager.makeEdgeLabel(e.label)
+        .directed()
         .multiplicity(edgeTitanMultiplicity(e))
         .make()
     }

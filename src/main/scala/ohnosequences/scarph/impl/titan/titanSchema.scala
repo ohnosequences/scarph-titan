@@ -4,9 +4,9 @@ object titanSchema {
 
   import ohnosequences.scarph._
   import com.thinkaurelius.titan.{ core => titan }
-  import titan.TitanGraph
-  import titan.schema.{ SchemaManager, TitanManagement, TitanGraphIndex }
+  import titan.{ TitanTransaction, TitanGraph }
   import titan.{ Multiplicity, Cardinality }
+  import titan.schema.{ SchemaManager, TitanManagement, TitanGraphIndex }
 
   import scala.reflect._
   import scala.util._
@@ -92,21 +92,38 @@ object titanSchema {
   /* This opens a new schema manager instance, create the schema and commits */
   implicit final class TitanGraphOps(val graph: TitanGraph) extends AnyVal {
 
-
-    def withManager[T](fn: TitanManagement => T): Try[T] = {
-      val manager = graph.openManagement
+    /* This is useful for wrapping writing operations */
+    def withTransaction[X](fn: TitanTransaction => X): Try[X] = {
+      val tx = graph.newTransaction()
 
       val result = Try {
-        val t = fn(manager)
-        manager.commit()
-        t
+        val x = fn(tx)
+        tx.commit()
+        x
       }
 
       result match {
-        case Failure(_) => manager.rollback(); result
+        case Failure(_) => tx.rollback(); result
         case Success(_) => result
       }
     }
+
+    /* Same as withTransaction, but uses TitanManagement (they don't have a common super-interface) */
+    def withManager[T](fn: TitanManagement => T): Try[T] = {
+      val tx = graph.openManagement()
+
+      val result = Try {
+        val x = fn(tx)
+        tx.commit()
+        x
+      }
+
+      result match {
+        case Failure(_) => tx.rollback(); result
+        case Success(_) => result
+      }
+    }
+
 
     def createSchema(schema: AnyGraphSchema): Try[Unit] = withManager { _.createSchema(schema) }
 

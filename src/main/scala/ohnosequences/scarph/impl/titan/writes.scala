@@ -34,19 +34,22 @@ case object writes {
          e := src.value.addEdge(e.label, tgt.value)
     }
 
-  implicit def titanCanSetProperties[E <: AnyGraphElement, P <: AnyProperty { type Source = E }]:
-        CanSetProperties[E, TElement, P] =
-    new CanSetProperties[E, TElement, P] {
+  implicit def titanCanSetProperties[
+    E <: AnyGraphElement,
+    ER <: TElement,
+    P <: AnyProperty { type Source = E },
+    V <: P#Target#Val
+  ]:  CanSetProperties[E, ER, P, V] =
+  new CanSetProperties[E, ER, P, V] {
 
-      def setProperty(
-        e: E := TElement,
-        p: P,
-        v: P#Target#Val
-      ): E := TElement = {
-        e.value.property[P#Target#Val](p.label, v)
-        e
-      }
-
+    def setProperty(
+      e: E := ER,
+      p: P,
+      v: V
+    ): E := ER = {
+      e.value.property[V](p.label, v)
+      e
     }
+  }
 
 }

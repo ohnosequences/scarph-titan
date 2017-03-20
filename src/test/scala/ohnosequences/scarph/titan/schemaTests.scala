@@ -41,6 +41,25 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     twitterGraph.createIndex(twitter.user.name)
     twitterGraph.createIndex(twitter.tweet.url)
 
+    twitterGraph.withTransaction { tx =>
+      import twitter._
+
+      val tw = unit := tx
+
+      val bob = tw.add(user)
+        .set(user.name, "Bob")
+        .set(user.age, 92)
+
+      val testTweet = tw.add(tweet)
+        .set(tweet.text, "test")
+        .set(tweet.url, "http://twitter.com/bob/1234")
+
+      posted.add(bob, testTweet)
+        .set(posted.time, "5 o'clock")
+
+      // TODO: add some actual data for testing
+    }
+
     // FIXME: old code for loading test graph doesn't work, because of incompatible Titan, new code doesn't work because of incompatible GraphSON format
     // import com.tinkerpop.blueprints.util.io.graphson._
     // GraphSONReader.inputGraph(twitterGraph, this.getClass.getResource("/twitter_graph.json").getPath)
@@ -78,7 +97,7 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     val postEdges = edges(posted)
 
     val names = name := Container[String](Iterable("@eparejatobes", "@laughedelic", "@evdokim"))
-    val ages = age := Container[Integer](Iterable(95, 5, 22))
+    val ages = age := Container[Int](Iterable(95, 5, 22))
     val times = time := Container[String](Iterable(
       "27.10.2013", "20.3.2013", "19.2.2013", "13.11.2012", "15.2.2014",
       "7.2.2014", "23.2.2012", "7.7.2011", "22.6.2011"

@@ -184,7 +184,7 @@ case object evals {
     )
 
 
-    implicit def eval_lookupV[
+    implicit def eval_lookupV_Container[
       V,
       P <: AnyProperty {
         type Source <: AnyVertex
@@ -193,12 +193,28 @@ case object evals {
     ]:  Eval[lookup[P], Container[V], TitanVertices] =
     new Eval( morph => values =>
       values flatMap { v =>
-        graph.query.has(morph.relation.label, v)
+        graph.query
+          .has(morph.relation.label, v)
           .vertices.asScala
       }
     )
 
-    implicit def eval_lookupE[
+    implicit def eval_lookupV[
+      V,
+      P <: AnyProperty {
+        type Source <: AnyVertex
+        type Target <: AnyValueType { type Val = V }
+      }
+    ]:  Eval[lookup[P], V, TitanVertices] =
+    new Eval( morph => value =>
+      Container(
+        graph.query
+          .has(morph.relation.label, value)
+          .vertices.asScala
+      )
+    )
+
+    implicit def eval_lookupE_Container[
       V,
       P <: AnyProperty {
         type Source <: AnyEdge
@@ -212,17 +228,32 @@ case object evals {
       }
     )
 
-    implicit def eval_lookupE_Alt[
+    implicit def eval_lookupE[
+      V,
       P <: AnyProperty {
-        type Source <: AnyEdge;
+        type Source <: AnyEdge
+        type Target <: AnyValueType { type Val = V }
       }
-    ]:  Eval[inV[P], Container[P#Target#Val], TitanEdges] =
-    new Eval( morph => values =>
-      values flatMap { v =>
-        graph.query.has(morph.relation.label, v)
+    ]:  Eval[lookup[P], V, TitanEdges] =
+    new Eval( morph => value =>
+      Container(
+        graph.query
+          .has(morph.relation.label, value)
           .edges.asScala
-      }
+      )
     )
+
+    // implicit def eval_lookupE_Alt[
+    //   P <: AnyProperty {
+    //     type Source <: AnyEdge;
+    //   }
+    // ]:  Eval[inV[P], Container[P#Target#Val], TitanEdges] =
+    // new Eval( morph => values =>
+    //   values flatMap { v =>
+    //     graph.query.has(morph.relation.label, v)
+    //       .edges.asScala
+    //   }
+    // )
 
   }
 

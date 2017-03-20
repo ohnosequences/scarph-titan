@@ -127,6 +127,8 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     assert { evaluate(q_getV)(users) =~= ages  }
     assert { evaluate(q_lookupV)(names) =~= users }
+    // FIXME: should fail:
+    assert { evaluate(lookup(user.name))(name("@evdokim")) =~= users }
     assert { evaluate(q_compV)(names) =~= ages }
     assert { evaluate(q_getE)(postEdges) =~= times }
     assert { evaluate(q_lookupE)(times) =~= postEdges }

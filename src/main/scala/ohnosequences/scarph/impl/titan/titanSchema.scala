@@ -5,10 +5,11 @@ object titanSchema {
   import ohnosequences.scarph._
   import com.thinkaurelius.titan.{ core => titan }
   import titan.TitanGraph
-  import titan.schema.TitanManagement
-  import titan.Multiplicity
+  import titan.schema.{ SchemaManager, TitanManagement, TitanGraphIndex }
+  import titan.{ Multiplicity, Cardinality }
 
   import scala.reflect._
+  import scala.util._
   // import scala.reflect.runtime.universe._
 
   final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity = a.sourceArity match {
@@ -27,15 +28,14 @@ object titanSchema {
   }
 
   // TODO this should be improved
-  // TODO return errors
-  implicit def titanGraphSchemaOps(graph: TitanGraph): TitanGraphSchemaOps = TitanGraphSchemaOps(graph)
-
-  final case class TitanGraphSchemaOps(val graph: TitanGraph) extends AnyVal {
+  /* These methods work in a context of a previously created schema manager transaction (see below) */
+  implicit final class SchemaManagerSchemaOps(val schemaManager: SchemaManager) extends AnyVal {
 
     final def addPropertyKey(v: AnyValueType): titan.PropertyKey = {
       println(s"  Creating [${v.label}] property key (${v.valueTag})")
 
-      graph.makePropertyKey(v.label)
+      schemaManager.makePropertyKey(v.label)
+        .cardinality( Cardinality.SINGLE )
         .dataType(v.valueTag.runtimeClass)
         .make()
     }
@@ -43,7 +43,8 @@ object titanSchema {
     final def addEdgeLabel(e: AnyEdge): titan.EdgeLabel = {
       println(s"  Creating [${e.label}] edge label")
 
-      graph.makeEdgeLabel(e.label)
+      schemaManager.makeEdgeLabel(e.label)
+        .directed()
         .multiplicity(edgeTitanMultiplicity(e))
         .make()
     }
@@ -51,21 +52,64 @@ object titanSchema {
     final def addVertexLabel(v: AnyVertex): titan.VertexLabel = {
       println(s"  Creating [${v.label}] vertex label")
 
-      graph.makeVertexLabel(v.label)
+      schemaManager.makeVertexLabel(v.label)
         .make()
     }
 
     // TODO: could return something more useful, for example pairs (scarph type, titan key)
     final def createSchema(schema: AnyGraphSchema): Unit = {
-
       println(s"  Creating schema types for ${schema.label}")
 
-      val propertyKeys = schema.valueTypes map graph.addPropertyKey
-      val edgeLabels   = schema.edges      map graph.addEdgeLabel
-      val vertexLabels = schema.vertices   map graph.addVertexLabel
-
-      // NOTE: not sure that it's needed
-      // graph.commit
+      val propertyKeys = schema.valueTypes map schemaManager.addPropertyKey
+      val edgeLabels   = schema.edges      map schemaManager.addEdgeLabel
+      val vertexLabels = schema.vertices   map schemaManager.addVertexLabel
     }
+  }
+
+  /* This is similar to SchemaManagerOps, but can create indexes */
+  implicit final class TitanManagementOps(val manager: TitanManagement) extends AnyVal {
+
+    def createIndex(property: AnyProperty): TitanGraphIndex = {
+      val ownerClass = property.source.elementType match {
+        case VertexElement => classOf[titan.TitanVertex]
+        case EdgeElement   => classOf[titan.TitanEdge]
+      }
+
+      val indexBuilder = manager
+          .buildIndex(s"${property.label}.index", ownerClass)
+          .addKey(manager.getPropertyKey( property.target.label ))
+
+      val withUniqueness = property.targetArity match {
+        case oneOrNone(_) | exactlyOne(_) => indexBuilder.unique()
+        case _                            => indexBuilder
+      }
+
+      withUniqueness.buildCompositeIndex()
+    }
+
+  }
+
+  /* This opens a new schema manager instance, create the schema and commits */
+  implicit final class TitanGraphOps(val graph: TitanGraph) extends AnyVal {
+
+
+    def withManager[T](fn: TitanManagement => T): Try[T] = {
+      val manager = graph.openManagement
+
+      val result = Try {
+        val t = fn(manager)
+        manager.commit()
+        t
+      }
+
+      result match {
+        case Failure(_) => manager.rollback(); result
+        case Success(_) => result
+      }
+    }
+
+    def createSchema(schema: AnyGraphSchema): Try[Unit] = withManager { _.createSchema(schema) }
+
+    def createIndex(property: AnyProperty): Try[TitanGraphIndex] = withManager { _.createIndex(property) }
   }
 }

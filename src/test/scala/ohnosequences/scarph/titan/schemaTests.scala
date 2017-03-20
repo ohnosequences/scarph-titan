@@ -38,6 +38,9 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
     twitterGraph.createSchema(twitter)
 
+    twitterGraph.createIndex(twitter.user.name)
+    twitterGraph.createIndex(twitter.tweet.url)
+
     // FIXME: old code for loading test graph doesn't work, because of incompatible Titan, new code doesn't work because of incompatible GraphSON format
     // import com.tinkerpop.blueprints.util.io.graphson._
     // GraphSONReader.inputGraph(twitterGraph, this.getClass.getResource("/twitter_graph.json").getPath)

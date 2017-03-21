@@ -43,6 +43,11 @@ case object types {
 
   final case class Container[T](val values: Iterable[T]) extends AnyContainer { type Inside = T }
 
+  case object Container {
+
+    def apply[T](vs: T*): Container[T] = Container(vs)
+  }
+
   final type TitanVertices = Container[core.TitanVertex]
   final type TitanEdges    = Container[core.TitanEdge]
 

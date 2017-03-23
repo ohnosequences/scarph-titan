@@ -4,7 +4,7 @@ object titanSchema {
 
   import ohnosequences.scarph._
   import com.thinkaurelius.titan.{ core => titan }
-  import titan.{ TitanTransaction, TitanGraph }
+  import titan.{ TitanTransaction, TitanGraphTransaction, TitanGraph }
   import titan.{ Multiplicity, Cardinality }
   import titan.schema.{ SchemaManager, TitanManagement, TitanGraphIndex }
 
@@ -93,7 +93,7 @@ object titanSchema {
   implicit final class TitanGraphOps(val graph: TitanGraph) extends AnyVal {
 
     /* This is useful for wrapping writing operations */
-    def withTransaction[X](fn: TitanTransaction => X): Try[X] = {
+    def withTransaction[X](fn: TitanGraphTransaction => X): Try[X] = {
       val tx = graph.newTransaction()
 
       val result = Try {
@@ -103,7 +103,7 @@ object titanSchema {
       }
 
       result match {
-        case Failure(_) => tx.rollback(); result
+        case Failure(err) => println(s"${err}"); tx.rollback(); result
         case Success(_) => result
       }
     }

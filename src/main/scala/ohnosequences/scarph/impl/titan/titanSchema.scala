@@ -91,12 +91,16 @@ case object titanSchema {
   implicit final class TitanManagementOps(val manager: TitanManagement) extends AnyVal {
 
     def createIndex(property: AnyProperty): TitanGraphIndex = {
+
       val ownerClass = property.source.elementType match {
         case VertexElement => classOf[titan.TitanVertex]
         case EdgeElement   => classOf[titan.TitanEdge]
       }
 
-      val pKey = manager.getPropertyKey( property.target.label )
+      val pKey = manager.getPropertyKey( property.label )
+
+      println { s"  Creating index for ${pKey}" }
+
       val indexBuilder = manager
           .buildIndex(s"${property.label}.index", ownerClass)
           .addKey(pKey)

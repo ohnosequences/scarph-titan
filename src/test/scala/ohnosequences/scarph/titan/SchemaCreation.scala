@@ -63,7 +63,22 @@ class SchemaCreation extends org.scalatest.FunSuite {
         }
 
       case Failure(err) => println(err); fail("Error creating types")
-
     }
+
+    val userIdIndex =
+      tGraph.withManager { mgmt =>
+        mgmt.createIndex(twitter.user.name)
+      }
+
+    userIdIndex match {
+
+      case Success(index) =>
+        tGraph.withManager { mgmt =>
+          assert { index === mgmt.getGraphIndex(s"${twitter.user.name.label}.index") }
+        }
+
+      case Failure(err) => println(err)
+    }
+
   }
 }

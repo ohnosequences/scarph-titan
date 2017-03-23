@@ -41,17 +41,18 @@ case object titanSchema {
   /* These methods work in a context of a previously created schema manager transaction (see below) */
   implicit final class SchemaManagerSchemaOps(val schemaManager: SchemaManager) extends AnyVal {
 
-    final def addPropertyKey(v: AnyProperty): titan.PropertyKey = {
+    final def addPropertyKey(p: AnyProperty): titan.PropertyKey = {
 
       val clzzFromTag =
-        v.targetArity.graphObject.valueTag.runtimeClass
+        p.targetArity.graphObject.valueTag.runtimeClass
 
       val clzz: Class[_] =
         primitivesToBoxed.get(clzzFromTag) getOrElse clzzFromTag
 
-      println(s"  Creating [${v.label}] property key (${clzz})")
+      println(s"  Creating [${p.label}] property key (${clzz})")
 
-      schemaManager.makePropertyKey(v.label)
+      Option(schemaManager.getPropertyKey(p.label)) getOrElse
+        schemaManager.makePropertyKey(p.label)
         .cardinality( Cardinality.SINGLE )
         .dataType(clzz)
         .make()
@@ -60,17 +61,19 @@ case object titanSchema {
     final def addEdgeLabel(e: AnyEdge): titan.EdgeLabel = {
       println(s"  Creating [${e.label}] edge label")
 
-      schemaManager.makeEdgeLabel(e.label)
-        .directed()
-        .multiplicity(edgeTitanMultiplicity(e))
-        .make()
+      Option(schemaManager.getEdgeLabel(e.label)) getOrElse
+        schemaManager.makeEdgeLabel(e.label)
+          .directed()
+          .multiplicity(edgeTitanMultiplicity(e))
+          .make()
     }
 
     final def addVertexLabel(v: AnyVertex): titan.VertexLabel = {
       println(s"  Creating [${v.label}] vertex label")
 
-      schemaManager.makeVertexLabel(v.label)
-        .make()
+      Option(schemaManager.getVertexLabel(v.label)) getOrElse
+        schemaManager.makeVertexLabel(v.label)
+          .make()
     }
 
     // TODO: could return something more useful, for example pairs (scarph type, titan key)
@@ -97,12 +100,14 @@ case object titanSchema {
         case EdgeElement   => classOf[titan.TitanEdge]
       }
 
+      val indexName = s"${property.label}.index"
+
       val pKey = manager.getPropertyKey( property.label )
 
       println { s"  Creating index for ${pKey}" }
 
       val indexBuilder = manager
-          .buildIndex(s"${property.label}.index", ownerClass)
+          .buildIndex(indexName, ownerClass)
           .addKey(pKey)
 
       val withUniqueness = property.targetArity match {
@@ -110,9 +115,8 @@ case object titanSchema {
         case _                            => indexBuilder
       }
 
-      withUniqueness.buildCompositeIndex()
+      Option(manager.getGraphIndex(indexName)) getOrElse withUniqueness.buildCompositeIndex()
     }
-
   }
 
   /* This opens a new schema manager instance, create the schema and commits */

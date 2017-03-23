@@ -19,7 +19,7 @@ case object writes {
 
       def addVertex(graph: TGraph)(v: V):
         V := TVertex =
-        v := graph.addVertex("type", v.label: String)
+        v := graph.addVertex(org.apache.tinkerpop.gremlin.structure.T.label, v.label: String)
     }
 
   implicit def titanCanAddEdges[E <: AnyEdge]:

@@ -21,41 +21,26 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
 
   override final def beforeAll() = {
 
-    /*
-    def cleanDir(f: File) {
-      if (f.isDirectory) f.listFiles.foreach(cleanDir(_))
-      else { println(f.toString); f.delete }
-    }
-    cleanDir(graphLocation)
-    */
-
-    // twitterGraph = TitanFactory.open("berkeleyje:" + graphLocation.getAbsolutePath)
-
-    println("Created Titan graph")
-
-    twitterGraph.createSchema(twitter)
-
-    twitterGraph.createIndex(twitter.user.name)
-    twitterGraph.createIndex(twitter.tweet.url)
-
-    twitterGraph.withTransaction { tx =>
-
-      val w = titanScarph(tx); import w._
-      val tw = unit := (tx); import tw._
-
-      val bob = tw.add(user)
-        .set(user.name, "Bob")
-        .set(user.age, 92)
-
-      val testTweet = tw.add(tweet)
-        .set(tweet.text, "test")
-        .set(tweet.url, "http://twitter.com/bob/1234")
-
-      posted.add(bob, testTweet)
-        .set(posted.time, "5 o'clock")
-
-      // TODO: add some actual data for testing
-    }
+    // println("Created Titan graph")
+    // twitterGraph.createSchema(twitter)
+    // println { "Created Twitter schema" }
+    //
+    // twitterGraph.withTransaction { tx =>
+    //
+    //   val w = titanScarph(tx); import w._
+    //   val tw = unit := (tx); import tw._
+    //
+    //   val bob = tw.add(user)
+    //     .set(user.name, "Bob")
+    //     .set(user.age, 92)
+    //
+    //   val testTweet = tw.add(tweet)
+    //     .set(tweet.text, "test")
+    //     .set(tweet.url, "http://twitter.com/bob/1234")
+    //
+    //   posted.add(bob, testTweet)
+    //     .set(posted.time, "5 o'clock")
+    // }
 
     // FIXME: old code for loading test graph doesn't work, because of incompatible Titan, new code doesn't work because of incompatible GraphSON format
     // import com.tinkerpop.blueprints.util.io.graphson._
@@ -74,8 +59,8 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
     // import com.tinkerpop.blueprints.util.io.graphson._
     // GraphSONWriter.outputGraph(twitterGraph, "graph_compact.json", GraphSONMode.COMPACT)
 
-    twitterGraph.close()
-    println("Shutdown Titan graph")
+    // twitterGraph.close()
+    // println("Shutdown Titan graph")
   }
 
   case object testSamples {
@@ -107,11 +92,11 @@ class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfte
   }
   import testSamples._
 
-  test("find bob") {
+  ignore("find bob") {
 
     import t.evals.categoryStructure._
     val ps = t.evals.propertyStructure(twitterGraph); import ps._
-    
+
     println { evaluate(lookup(user.name))(name("Bob")) }
   }
 

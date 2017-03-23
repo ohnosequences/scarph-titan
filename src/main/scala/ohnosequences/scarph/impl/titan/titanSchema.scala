@@ -1,6 +1,6 @@
 package ohnosequences.scarph.impl.titan
 
-object titanSchema {
+case object titanSchema {
 
   import ohnosequences.scarph._
   import com.thinkaurelius.titan.{ core => titan }
@@ -10,7 +10,17 @@ object titanSchema {
 
   import scala.reflect._
   import scala.util._
-  // import scala.reflect.runtime.universe._
+
+  val primitivesToBoxed = Map[Class[_], Class[_ <: AnyRef]](
+    classOf[Int]      -> classOf[java.lang.Integer],
+    classOf[Long]     -> classOf[java.lang.Long],
+    classOf[Boolean]  -> classOf[java.lang.Boolean],
+    classOf[Float]    -> classOf[java.lang.Float],
+    classOf[Double]   -> classOf[java.lang.Double],
+    classOf[Char]     -> classOf[java.lang.Character],
+    classOf[Byte]     -> classOf[java.lang.Byte],
+    classOf[Short]    -> classOf[java.lang.Short]
+  )
 
   final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity = a.sourceArity match {
 
@@ -31,12 +41,19 @@ object titanSchema {
   /* These methods work in a context of a previously created schema manager transaction (see below) */
   implicit final class SchemaManagerSchemaOps(val schemaManager: SchemaManager) extends AnyVal {
 
-    final def addPropertyKey(v: AnyValueType): titan.PropertyKey = {
-      println(s"  Creating [${v.label}] property key (${v.valueTag})")
+    final def addPropertyKey(v: AnyProperty): titan.PropertyKey = {
+
+      val clzzFromTag =
+        v.targetArity.graphObject.valueTag.runtimeClass
+
+      val clzz: Class[_] =
+        primitivesToBoxed.get(clzzFromTag) getOrElse clzzFromTag
+
+      println(s"  Creating [${v.label}] property key (${clzz})")
 
       schemaManager.makePropertyKey(v.label)
         .cardinality( Cardinality.SINGLE )
-        .dataType(v.valueTag.runtimeClass)
+        .dataType(clzz)
         .make()
     }
 
@@ -59,10 +76,14 @@ object titanSchema {
     // TODO: could return something more useful, for example pairs (scarph type, titan key)
     final def createSchema(schema: AnyGraphSchema): Unit = {
       println(s"  Creating schema types for ${schema.label}")
-
-      val propertyKeys = schema.valueTypes map schemaManager.addPropertyKey
-      val edgeLabels   = schema.edges      map schemaManager.addEdgeLabel
-      val vertexLabels = schema.vertices   map schemaManager.addVertexLabel
+      println(s"  Creating vertices")
+      val vertexLabels = schema.vertices.toSeq.map(schemaManager.addVertexLabel)
+      println(s"  Creating edges")
+      val edgeLabels   = schema.edges.toSeq.map(schemaManager.addEdgeLabel)
+      println(s"  Creating properties")
+      val props = schema.properties.toSeq; println(props)
+      val propertyKeys = props.map(schemaManager.addPropertyKey)
+      println(s"  Finished creating schema types for ${schema.label}")
     }
   }
 
@@ -75,9 +96,10 @@ object titanSchema {
         case EdgeElement   => classOf[titan.TitanEdge]
       }
 
+      val pKey = manager.getPropertyKey( property.target.label )
       val indexBuilder = manager
           .buildIndex(s"${property.label}.index", ownerClass)
-          .addKey(manager.getPropertyKey( property.target.label ))
+          .addKey(pKey)
 
       val withUniqueness = property.targetArity match {
         case oneOrNone(_) | exactlyOne(_) => indexBuilder.unique()

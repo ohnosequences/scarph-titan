@@ -37,7 +37,6 @@ case object titanSchema {
     }
   }
 
-
   type MGMT = titan.schema.TitanManagement
 
   // TODO this should be improved
@@ -60,7 +59,9 @@ case object titanSchema {
         .dataType(clzz)
         .make()
 
-      val index = schemaManager.createOrGetIndexFor(p)
+      // why here? because https://github.com/thinkaurelius/titan/issues/793#issuecomment-60698050
+      val index =
+        schemaManager.createOrGetIndexFor(p)
 
       propertyKey
     }

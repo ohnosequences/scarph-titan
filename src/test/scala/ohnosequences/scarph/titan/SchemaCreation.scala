@@ -67,7 +67,7 @@ class SchemaCreation extends org.scalatest.FunSuite {
 
     val userIdIndex =
       tGraph.withManager { mgmt =>
-        mgmt.createIndex(twitter.user.name)
+        mgmt.createOrGetIndexFor(twitter.user.name)
       }
 
     userIdIndex match {

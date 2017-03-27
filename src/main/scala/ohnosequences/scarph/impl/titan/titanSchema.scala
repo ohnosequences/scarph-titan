@@ -93,29 +93,41 @@ case object titanSchema {
   /* This is similar to SchemaManagerOps, but can create indexes */
   implicit final class TitanManagementOps(val manager: TitanManagement) extends AnyVal {
 
-    def createIndex(property: AnyProperty): TitanGraphIndex = {
+    def createOrGetIndexFor(property: AnyProperty): TitanGraphIndex = {
 
-      val ownerClass = property.source.elementType match {
-        case VertexElement => classOf[titan.TitanVertex]
-        case EdgeElement   => classOf[titan.TitanEdge]
-      }
+      val ownerClass: Class[_ <: org.apache.tinkerpop.gremlin.structure.Element] =
+        property.source.elementType match {
+          case VertexElement => classOf[titan.TitanVertex]
+          case EdgeElement   => classOf[titan.TitanEdge]
+        }
 
-      val indexName = s"${property.label}.index"
+      val propertyKey: titan.PropertyKey =
+        manager getPropertyKey property.label
 
-      val pKey = manager.getPropertyKey( property.label )
+      val indexName: String =
+        s"${property.label}.index"
 
-      println { s"  Creating index for ${pKey}" }
-
-      val indexBuilder = manager
+      val genericConf =
+        manager
           .buildIndex(indexName, ownerClass)
-          .addKey(pKey)
+          .addKey(propertyKey)
+          .indexOnly(
+            property.source.elementType match {
+              case VertexElement => manager.getVertexLabel(property.source.label)
+              case EdgeElement   => manager.getEdgeLabel(property.source.label)
+            }
+          )
 
-      val withUniqueness = property.targetArity match {
-        case oneOrNone(_) | exactlyOne(_) => indexBuilder.unique()
-        case _                            => indexBuilder
-      }
+      val indexBuilder =
+        property.sourceArity match {
+          case oneOrNone(_) | exactlyOne(_) => genericConf.unique()
+          case _                            => genericConf
+        }
 
-      Option(manager.getGraphIndex(indexName)) getOrElse withUniqueness.buildCompositeIndex()
+      println { s"  Creating index ${indexName} for ${propertyKey}" }
+      println { s"    Index configuration: ${indexBuilder}"         }
+
+      Option(manager.getGraphIndex(indexName)) getOrElse indexBuilder.buildCompositeIndex()
     }
   }
 
@@ -154,9 +166,10 @@ case object titanSchema {
       }
     }
 
+    def createSchema(schema: AnyGraphSchema): Try[Unit] =
+      withManager { _ createSchema schema }
 
-    def createSchema(schema: AnyGraphSchema): Try[Unit] = withManager { _.createSchema(schema) }
-
-    def createIndex(property: AnyProperty): Try[TitanGraphIndex] = withManager { _.createIndex(property) }
+    def createIndex(property: AnyProperty): Try[TitanGraphIndex] =
+      withManager { _ createOrGetIndexFor property }
   }
 }

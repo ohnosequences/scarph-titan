@@ -37,9 +37,12 @@ case object titanSchema {
     }
   }
 
+
+  type MGMT = titan.schema.TitanManagement
+
   // TODO this should be improved
   /* These methods work in a context of a previously created schema manager transaction (see below) */
-  implicit final class SchemaManagerSchemaOps(val schemaManager: SchemaManager) extends AnyVal {
+  implicit final class SchemaManagerSchemaOps(val schemaManager: MGMT) extends AnyVal {
 
     final def addPropertyKey(p: AnyProperty): titan.PropertyKey = {
 
@@ -51,11 +54,15 @@ case object titanSchema {
 
       println(s"  Creating [${p.label}] property key (${clzz})")
 
-      Option(schemaManager.getPropertyKey(p.label)) getOrElse
+      val propertyKey = Option(schemaManager.getPropertyKey(p.label)) getOrElse
         schemaManager.makePropertyKey(p.label)
         .cardinality( Cardinality.SINGLE )
         .dataType(clzz)
         .make()
+
+      val index = schemaManager.createOrGetIndexFor(p)
+
+      propertyKey
     }
 
     final def addEdgeLabel(e: AnyEdge): titan.EdgeLabel = {
@@ -91,7 +98,7 @@ case object titanSchema {
   }
 
   /* This is similar to SchemaManagerOps, but can create indexes */
-  implicit final class TitanManagementOps(val manager: TitanManagement) extends AnyVal {
+  implicit final class TitanManagementOps(val manager: MGMT) extends AnyVal {
 
     def createOrGetIndexFor(property: AnyProperty): TitanGraphIndex = {
 
@@ -124,10 +131,11 @@ case object titanSchema {
           case _                            => genericConf
         }
 
-      println { s"  Creating index ${indexName} for ${propertyKey}" }
-      println { s"    Index configuration: ${indexBuilder}"         }
+      Option(manager.getGraphIndex(indexName)) getOrElse {
 
-      Option(manager.getGraphIndex(indexName)) getOrElse indexBuilder.buildCompositeIndex()
+        println { s"  Creating index ${indexName} for ${propertyKey}" }
+        indexBuilder.buildCompositeIndex()
+      }
     }
   }
 
@@ -151,7 +159,7 @@ case object titanSchema {
     }
 
     /* Same as withTransaction, but uses TitanManagement (they don't have a common super-interface) */
-    def withManager[T](fn: TitanManagement => T): Try[T] = {
+    def withManager[T](fn: MGMT => T): Try[T] = {
       val tx = graph.openManagement()
 
       val result = Try {

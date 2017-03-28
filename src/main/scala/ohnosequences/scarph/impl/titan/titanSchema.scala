@@ -86,12 +86,12 @@ case object schema {
           schemaManager
             .buildIndex(indexNameFor(property), elementClass)
             .addKey(propertyKey)
-            .indexOnly(
-              property.source.elementType match {
-                case VertexElement => schemaManager getVertexLabel property.source.label
-                case EdgeElement   => schemaManager getEdgeLabel property.source.label
-              }
-            )
+            // .indexOnly(
+            //   property.source.elementType match {
+            //     case VertexElement => schemaManager getVertexLabel property.source.label
+            //     case EdgeElement   => schemaManager getEdgeLabel property.source.label
+            //   }
+            // )
 
         val indexBuilder =
           property.sourceArity match {

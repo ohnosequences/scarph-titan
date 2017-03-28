@@ -1,21 +1,9 @@
 package ohnosequences.scarph.impl.titan.test
 
 import com.thinkaurelius.titan.core
-import core.TitanGraphTransaction
-import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
-
-import ohnosequences.scarph._
-import ohnosequences.scarph.impl._
-import ohnosequences.scarph.syntax._
-
-import ohnosequences.scarph.test._
-import ohnosequences.scarph.test.twitter._
-
-import ohnosequences.scarph.impl.{ titan => t }
-import t.types._, t.evals._, t.syntax._, t.writes._, t.titanSchema._
+import ohnosequences.scarph.test.twitter
+import ohnosequences.scarph.impl.titan.schema._
 import java.io.File
-import util.{ Success, Failure, Try }
-import reflect.ClassTag
 
 class SchemaCreation extends org.scalatest.FunSuite {
 
@@ -32,7 +20,6 @@ class SchemaCreation extends org.scalatest.FunSuite {
 
     val tGraph =
       configuration.open()
-      // core.TitanFactory.open("inmemory")
 
     val vertices =
       twitter.vertices.toList
@@ -45,34 +32,50 @@ class SchemaCreation extends org.scalatest.FunSuite {
 
     val createdTypesT =
       tGraph.withManager { mgmt =>
-        ///////////////////////////////////////////// vertices
-        println { s"creating vertices: ${vertices}" }
+
         val vlbls =
-          vertices.map(mgmt.addVertexLabel)
-        // println{ s"added vertex labels: ${vlbls}" }
-        ///////////////////////////////////////////// edges
-        println { s"creating edges: ${edges}" }
+          vertices map mgmt.createOrGetVertexLabel
+
         val elbls =
-          edges.map(mgmt.addEdgeLabel)
-        // println{ s"added edge labels: ${edgeLabels}" }
-        ///////////////////////////////////////////// properties
-        println { s"creating properties: ${properties}" }
+          edges map mgmt.createOrGetEdgeLabel
+
         val pks =
-          properties.map(mgmt.addPropertyKey)
-        // println{ s"added property keys: ${propertyKeys}" }
+          properties map mgmt.createOrGetPropertyKey
+
         (vlbls, elbls, pks)
       }
 
-    // createdTypesT match {
-    //
-    //   case Success((vertexLabels, edgeLabels, propertyKeys)) =>
-    //     tGraph.withManager { mgmt =>
-    //       assert { Set(vertexLabels)  === Set( vertices.map(v => mgmt.getVertexLabel(v.label)) ) }
-    //       assert { Set(propertyKeys)  === Set( properties.map(p => mgmt.getPropertyKey(p.label)) ) }
-    //       assert { Set(edgeLabels)    === Set( edges.map(e => mgmt.getEdgeLabel(e.label)) ) }
-    //     }
-    //
-    //   case Failure(err) => println(err); fail("Error creating types")
-    // }
+    val zzz =
+      tGraph.close()
+
+    val tGraphAfter =
+      configuration.open()
+
+    val checks =
+      tGraphAfter.withManager { mgmt =>
+
+        assert {
+          noNone { vertices map mgmt.vertexLabel    } &&
+          noNone { edges map mgmt.edgeLabel         } &&
+          noNone { properties map mgmt.propertyKey  } &&
+          noNone { properties map mgmt.indexFor     }
+        }
+      }
+
+    tGraphAfter.close()
+    cleanDB
+  }
+
+  def noNone[X](xs: Seq[Option[X]]): Boolean =
+    xs contains { opt: Option[X] => !opt.isEmpty }
+
+  def cleanDB: Unit = {
+
+    val file = new File("db/")
+    if (file.isDirectory) {
+      Option(file.listFiles).map(_.toList).getOrElse(Nil).foreach(_.delete)
+    }
+
+    file.delete
   }
 }

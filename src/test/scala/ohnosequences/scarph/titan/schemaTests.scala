@@ -12,7 +12,7 @@ import ohnosequences.scarph.test._
 import ohnosequences.scarph.test.twitter._
 
 import ohnosequences.scarph.impl.{ titan => t }
-import t.types._, t.evals._, t.syntax._, t.writes._, t.titanSchema._
+import t.types._, t.evals._, t.syntax._, t.writes._, t.schema._
 import java.io.File
 
 class TitanSuite extends org.scalatest.FunSuite with org.scalatest.BeforeAndAfterAll {

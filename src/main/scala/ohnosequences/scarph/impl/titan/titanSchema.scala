@@ -1,142 +1,118 @@
 package ohnosequences.scarph.impl.titan
 
-case object titanSchema {
+import ohnosequences.scarph._
+import com.thinkaurelius.titan.{ core => titan }
+import titan.{ TitanTransaction, TitanGraphTransaction, TitanGraph }
+import titan.{ Multiplicity, Cardinality }
+import titan.schema.{ SchemaManager, TitanManagement, TitanGraphIndex }
 
-  import ohnosequences.scarph._
-  import com.thinkaurelius.titan.{ core => titan }
-  import titan.{ TitanTransaction, TitanGraphTransaction, TitanGraph }
-  import titan.{ Multiplicity, Cardinality }
-  import titan.schema.{ SchemaManager, TitanManagement, TitanGraphIndex }
+import scala.reflect._
+import scala.util._
 
-  import scala.reflect._
-  import scala.util._
-
-  val primitivesToBoxed = Map[Class[_], Class[_ <: AnyRef]](
-    classOf[Int]      -> classOf[java.lang.Integer],
-    classOf[Long]     -> classOf[java.lang.Long],
-    classOf[Boolean]  -> classOf[java.lang.Boolean],
-    classOf[Float]    -> classOf[java.lang.Float],
-    classOf[Double]   -> classOf[java.lang.Double],
-    classOf[Char]     -> classOf[java.lang.Character],
-    classOf[Byte]     -> classOf[java.lang.Byte],
-    classOf[Short]    -> classOf[java.lang.Short]
-  )
-
-  final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity = a.sourceArity match {
-
-    case oneOrNone(_) | exactlyOne(_)   => a.targetArity match {
-
-      case oneOrNone(_)  | exactlyOne(_)  => Multiplicity.ONE2ONE
-      case atLeastOne(_) | manyOrNone(_)  => Multiplicity.ONE2MANY
-    }
-
-    case atLeastOne(_) | manyOrNone(_)  => a.targetArity match {
-
-      case oneOrNone(_)  | exactlyOne(_)  => Multiplicity.MANY2ONE
-      case atLeastOne(_) | manyOrNone(_)  => Multiplicity.MULTI
-    }
-  }
-
-  type MGMT = titan.schema.TitanManagement
+case object schema {
 
   // TODO this should be improved
   /* These methods work in a context of a previously created schema manager transaction (see below) */
-  implicit final class SchemaManagerSchemaOps(val schemaManager: MGMT) extends AnyVal {
+  implicit final class TitanManagementOps(val schemaManager: TitanManagement) extends AnyVal {
 
-    final def addPropertyKey(p: AnyProperty): titan.PropertyKey = {
+    final def vertexLabel(v: AnyVertex): Option[titan.VertexLabel] =
+      Option(schemaManager getVertexLabel v.label)
 
-      val clzzFromTag =
-        p.targetArity.graphObject.valueTag.runtimeClass
+    final def createOrGetVertexLabel(v: AnyVertex): titan.VertexLabel =
+      vertexLabel(v) getOrElse {
+        schemaManager
+          .makeVertexLabel(v.label)
+          .make()
+      }
 
-      val clzz: Class[_] =
-        primitivesToBoxed.get(clzzFromTag) getOrElse clzzFromTag
+    final def edgeLabel(e: AnyEdge): Option[titan.EdgeLabel] =
+      Option(schemaManager getEdgeLabel e.label)
 
-      println(s"  Creating [${p.label}] property key (${clzz})")
-
-      val propertyKey = Option(schemaManager.getPropertyKey(p.label)) getOrElse
-        schemaManager.makePropertyKey(p.label)
-        .cardinality( Cardinality.SINGLE )
-        .dataType(clzz)
-        .make()
-
-      // why here? because https://github.com/thinkaurelius/titan/issues/793#issuecomment-60698050
-      val index =
-        schemaManager.createOrGetIndexFor(p)
-
-      propertyKey
-    }
-
-    final def addEdgeLabel(e: AnyEdge): titan.EdgeLabel = {
-      println(s"  Creating [${e.label}] edge label")
-
-      Option(schemaManager.getEdgeLabel(e.label)) getOrElse
-        schemaManager.makeEdgeLabel(e.label)
+    final def createOrGetEdgeLabel(e: AnyEdge): titan.EdgeLabel =
+      edgeLabel(e) getOrElse {
+        schemaManager
+          .makeEdgeLabel(e.label)
           .directed()
           .multiplicity(edgeTitanMultiplicity(e))
           .make()
-    }
+      }
 
-    final def addVertexLabel(v: AnyVertex): titan.VertexLabel = {
-      println(s"  Creating [${v.label}] vertex label")
+    final def propertyKey(p: AnyProperty): Option[titan.PropertyKey] =
+      Option(schemaManager getPropertyKey p.label)
 
-      Option(schemaManager.getVertexLabel(v.label)) getOrElse
-        schemaManager.makeVertexLabel(v.label)
-          .make()
-    }
+    final def createOrGetPropertyKey(p: AnyProperty): titan.PropertyKey =
+      propertyKey(p) getOrElse {
 
-    // TODO: could return something more useful, for example pairs (scarph type, titan key)
-    final def createSchema(schema: AnyGraphSchema): Unit = {
-      println(s"  Creating schema types for ${schema.label}")
-      println(s"  Creating vertices")
-      val vertexLabels = schema.vertices.toSeq.map(schemaManager.addVertexLabel)
-      println(s"  Creating edges")
-      val edgeLabels   = schema.edges.toSeq.map(schemaManager.addEdgeLabel)
-      println(s"  Creating properties")
-      val props = schema.properties.toSeq; println(props)
-      val propertyKeys = props.map(schemaManager.addPropertyKey)
-      println(s"  Finished creating schema types for ${schema.label}")
-    }
-  }
+        val clzzFromTag: Class[_] =
+          p.targetArity.graphObject.valueTag.runtimeClass
 
-  /* This is similar to SchemaManagerOps, but can create indexes */
-  implicit final class TitanManagementOps(val manager: MGMT) extends AnyVal {
+        val clzz: Class[_] =
+          primitivesToBoxed.get(clzzFromTag) getOrElse clzzFromTag
 
-    def createOrGetIndexFor(property: AnyProperty): TitanGraphIndex = {
+        val propertyKey: titan.PropertyKey =
+          Option(schemaManager getPropertyKey p.label) getOrElse
+            schemaManager
+            .makePropertyKey(p.label)
+            .cardinality( Cardinality.SINGLE )
+            .dataType(clzz)
+            .make()
 
-      val ownerClass: Class[_ <: org.apache.tinkerpop.gremlin.structure.Element] =
-        property.source.elementType match {
-          case VertexElement => classOf[titan.TitanVertex]
-          case EdgeElement   => classOf[titan.TitanEdge]
-        }
+        // why here? because https://github.com/thinkaurelius/titan/issues/793#issuecomment-60698050
+        val index =
+          createOrGetIndexFor(p)
 
-      val propertyKey: titan.PropertyKey =
-        manager getPropertyKey property.label
+        propertyKey
+      }
 
-      val indexName: String =
-        s"${property.label}.index"
+    def indexNameFor(property: AnyProperty): String =
+      s"${property.label}.index"
 
-      val genericConf =
-        manager
-          .buildIndex(indexName, ownerClass)
-          .addKey(propertyKey)
-          .indexOnly(
-            property.source.elementType match {
-              case VertexElement => manager.getVertexLabel(property.source.label)
-              case EdgeElement   => manager.getEdgeLabel(property.source.label)
-            }
-          )
+    final def indexFor(p: AnyProperty): Option[TitanGraphIndex] =
+      Option(schemaManager getGraphIndex indexNameFor(p))
 
-      val indexBuilder =
-        property.sourceArity match {
-          case oneOrNone(_) | exactlyOne(_) => genericConf.unique()
-          case _                            => genericConf
-        }
+    final def createOrGetIndexFor(property: AnyProperty): TitanGraphIndex =
+      indexFor(property) getOrElse {
 
-      Option(manager.getGraphIndex(indexName)) getOrElse {
+        val elementClass: Class[_ <: org.apache.tinkerpop.gremlin.structure.Element] =
+          property.source.elementType match {
+            case VertexElement => classOf[titan.TitanVertex]
+            case EdgeElement   => classOf[titan.TitanEdge]
+          }
 
-        println { s"  Creating index ${indexName} for ${propertyKey}" }
+        val propertyKey: titan.PropertyKey =
+          schemaManager getPropertyKey property.label
+
+        val genericConf =
+          schemaManager
+            .buildIndex(indexNameFor(property), elementClass)
+            .addKey(propertyKey)
+            .indexOnly(
+              property.source.elementType match {
+                case VertexElement => schemaManager getVertexLabel property.source.label
+                case EdgeElement   => schemaManager getEdgeLabel property.source.label
+              }
+            )
+
+        val indexBuilder =
+          property.sourceArity match {
+            case oneOrNone(_) | exactlyOne(_) => genericConf.unique()
+            case _                            => genericConf
+          }
+
         indexBuilder.buildCompositeIndex()
       }
+
+    // TODO: could return something more useful, for example pairs (scarph type, titan key)
+    final def createOrGetSchema(schema: AnyGraphSchema): Unit = {
+
+      val vertexLabels =
+        schema.vertices.toSeq map schemaManager.createOrGetVertexLabel
+
+      val edgeLabels   =
+        schema.edges.toSeq map schemaManager.createOrGetEdgeLabel
+
+      val props =
+        schema.properties.toSeq map schemaManager.createOrGetPropertyKey
     }
   }
 
@@ -145,6 +121,7 @@ case object titanSchema {
 
     /* This is useful for wrapping writing operations */
     def withTransaction[X](fn: TitanGraphTransaction => X): Try[X] = {
+
       val tx = graph.newTransaction()
 
       val result = Try {
@@ -160,7 +137,8 @@ case object titanSchema {
     }
 
     /* Same as withTransaction, but uses TitanManagement (they don't have a common super-interface) */
-    def withManager[T](fn: MGMT => T): Try[T] = {
+    def withManager[T](fn: TitanManagement => T): Try[T] = {
+
       val tx = graph.openManagement()
 
       val result = Try {
@@ -176,9 +154,34 @@ case object titanSchema {
     }
 
     def createSchema(schema: AnyGraphSchema): Try[Unit] =
-      withManager { _ createSchema schema }
-
-    def createIndex(property: AnyProperty): Try[TitanGraphIndex] =
-      withManager { _ createOrGetIndexFor property }
+      withManager { _ createOrGetSchema schema }
   }
+
+  private val primitivesToBoxed: Map[Class[_], Class[_ <: AnyRef]] =
+    Map[Class[_], Class[_ <: AnyRef]](
+      classOf[Int]      -> classOf[java.lang.Integer],
+      classOf[Long]     -> classOf[java.lang.Long],
+      classOf[Boolean]  -> classOf[java.lang.Boolean],
+      classOf[Float]    -> classOf[java.lang.Float],
+      classOf[Double]   -> classOf[java.lang.Double],
+      classOf[Char]     -> classOf[java.lang.Character],
+      classOf[Byte]     -> classOf[java.lang.Byte],
+      classOf[Short]    -> classOf[java.lang.Short]
+    )
+
+  final def edgeTitanMultiplicity(a: AnyEdge): Multiplicity =
+    a.sourceArity match {
+
+      case oneOrNone(_) | exactlyOne(_)   => a.targetArity match {
+
+        case oneOrNone(_)  | exactlyOne(_)  => Multiplicity.ONE2ONE
+        case atLeastOne(_) | manyOrNone(_)  => Multiplicity.ONE2MANY
+      }
+
+      case atLeastOne(_) | manyOrNone(_)  => a.targetArity match {
+
+        case oneOrNone(_)  | exactlyOne(_)  => Multiplicity.MANY2ONE
+        case atLeastOne(_) | manyOrNone(_)  => Multiplicity.MULTI
+      }
+    }
 }

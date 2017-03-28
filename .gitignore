@@ -24,3 +24,6 @@ credentials.sbt
 
 .tags*
 .DS_Store
+
+# Titan test DB
+db

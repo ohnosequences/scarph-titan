@@ -1,28 +1,25 @@
 package ohnosequences.scarph.impl.titan.test
 
 import com.thinkaurelius.titan.core
-import core.TitanGraphTransaction
-import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
-
-import ohnosequences.scarph._
-import ohnosequences.scarph.impl._
-import ohnosequences.scarph.syntax._
-
-import ohnosequences.scarph.test._
-import ohnosequences.scarph.test.twitter._
-
-import ohnosequences.scarph.impl.{ titan => t }
-import t.types._, t.evals._, t.syntax._, t.writes._, t.titanSchema._
+import ohnosequences.scarph.test.twitter
+import ohnosequences.scarph.impl.titan.schema._
 import java.io.File
-import util.{ Success, Failure, Try }
-import reflect.ClassTag
 
 class SchemaCreation extends org.scalatest.FunSuite {
 
   test("create all types") {
 
+    val configuration: core.TitanFactory.Builder =
+    core.TitanFactory.build()
+      .set(                      "schema.default",  "none"          )
+      .set(                     "storage.backend",  "berkeleyje"    )
+      .set(                   "storage.directory",  "db"            )
+      .set(                "storage.transactions",  true            )
+      .set( "storage.berkeleyje.cache-percentage",  20              )
+      .set(  "storage.berkeleyje.isolation-level",  "SERIALIZABLE"  )
+
     val tGraph =
-      core.TitanFactory.open("inmemory")
+      configuration.open()
 
     val vertices =
       twitter.vertices.toList
@@ -35,50 +32,50 @@ class SchemaCreation extends org.scalatest.FunSuite {
 
     val createdTypesT =
       tGraph.withManager { mgmt =>
-        ///////////////////////////////////////////// vertices
-        println { s"creating vertices: ${vertices}" }
+
         val vlbls =
-          vertices.map(mgmt.addVertexLabel)
-        // println{ s"added vertex labels: ${vlbls}" }
-        ///////////////////////////////////////////// edges
-        println { s"creating edges: ${edges}" }
+          vertices map mgmt.createOrGetVertexLabel
+
         val elbls =
-          edges.map(mgmt.addEdgeLabel)
-        // println{ s"added edge labels: ${edgeLabels}" }
-        ///////////////////////////////////////////// properties
-        println { s"creating properties: ${properties}" }
+          edges map mgmt.createOrGetEdgeLabel
+
         val pks =
-          properties.map(mgmt.addPropertyKey)
-        // println{ s"added property keys: ${propertyKeys}" }
+          properties map mgmt.createOrGetPropertyKey
+
         (vlbls, elbls, pks)
       }
 
-    createdTypesT match {
+    val zzz =
+      tGraph.close()
 
-      case Success((vertexLabels, edgeLabels, propertyKeys)) =>
-        tGraph.withManager { mgmt =>
-          assert { Set(vertexLabels)  === Set( vertices.map(v => mgmt.getVertexLabel(v.label)) ) }
-          assert { Set(propertyKeys)  === Set( properties.map(p => mgmt.getPropertyKey(p.label)) ) }
-          assert { Set(edgeLabels)    === Set( edges.map(e => mgmt.getEdgeLabel(e.label)) ) }
+    val tGraphAfter =
+      configuration.open()
+
+    val checks =
+      tGraphAfter.withManager { mgmt =>
+
+        assert {
+          noNone { vertices map mgmt.vertexLabel    } &&
+          noNone { edges map mgmt.edgeLabel         } &&
+          noNone { properties map mgmt.propertyKey  } &&
+          noNone { properties map mgmt.indexFor     }
         }
-
-      case Failure(err) => println(err); fail("Error creating types")
-    }
-
-    val userIdIndex =
-      tGraph.withManager { mgmt =>
-        mgmt.createIndex(twitter.user.name)
       }
 
-    userIdIndex match {
+    tGraphAfter.close()
+    cleanDB
+  }
 
-      case Success(index) =>
-        tGraph.withManager { mgmt =>
-          assert { index === mgmt.getGraphIndex(s"${twitter.user.name.label}.index") }
-        }
+  def noNone[X](xs: Seq[Option[X]]): Boolean =
+    xs contains { opt: Option[X] => !opt.isEmpty }
 
-      case Failure(err) => println(err)
+  def cleanDB: Unit = {
+
+    val file = new File("db/")
+    if (file.isDirectory) {
+      Option(file.listFiles).map(_.toList).getOrElse(Nil).foreach(_.delete)
     }
 
+    file.delete
   }
 }

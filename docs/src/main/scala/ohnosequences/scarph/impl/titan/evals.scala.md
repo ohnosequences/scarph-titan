@@ -8,64 +8,62 @@ case object evals {
 
   import scala.collection.JavaConverters.{ asJavaIterableConverter, iterableAsScalaIterableConverter }
 
-  import ohnosequences.{ scarph => s }
-  import s.objects._, s.morphisms._, s.evals._
+  import ohnosequences.scarph._, impl._
 
   import com.thinkaurelius.titan.core
-  import com.tinkerpop.blueprints
-  import com.tinkerpop.blueprints.Direction
+  import org.apache.tinkerpop.gremlin.structure.Direction;
 
 
-  trait TitanCategoryStructure extends CategoryStructure
+  trait TitanCategoryStructure extends DaggerCategory
 
 
 
-  trait TitanGraphStructure extends GraphStructure {
+  trait TitanGraphStructure extends Relations {
 
     type RawEdge = TitanEdges
     type RawSource = TitanVertices
     type RawTarget = TitanVertices
 
-    def outVRaw(edge: AnyEdge)(v: RawSource): RawTarget =
+    def raw_outV(edge: AnyEdge)(v: RawSource): RawTarget =
       Container(
         v.values flatMap {
           _.query
             .labels(edge.label)
             .direction(Direction.OUT)
-            .vertexIds.asScala
+            .vertices.asScala
         }
       )
-    def inVRaw(edge: AnyEdge)(v: RawTarget): RawSource =
+    def raw_inV(edge: AnyEdge)(v: RawTarget): RawSource =
       Container(
         v.values flatMap {
           _.query
             .labels(edge.label)
             .direction(Direction.IN)
-            .vertexIds.asScala
+            .vertices.asScala
         }
       )
 
 
-    def outERaw(edge: AnyEdge)(v: RawSource): RawEdge =
+    def raw_outE(edge: AnyEdge)(v: RawSource): RawEdge =
       v flatMap {
         _.query
           .labels(edge.label)
           .direction(Direction.OUT)
-          .titanEdges.asScala
+          .edges.asScala
       }
-    def sourceRaw(edge: AnyEdge)(e: RawEdge): RawSource =
-      e map { _.getVertex(Direction.OUT) }
+    def raw_source(edge: AnyEdge)(e: RawEdge): RawSource =
+      e map { _.vertex(Direction.OUT) }
 
 
-    def inERaw(edge: AnyEdge)(v: RawTarget): RawEdge =
+    def raw_inE(edge: AnyEdge)(v: RawTarget): RawEdge =
       v flatMap {
         _.query
           .labels(edge.label)
           .direction(Direction.IN)
-          .titanEdges.asScala
+          .edges.asScala
       }
-    def targetRaw(edge: AnyEdge)(e: RawEdge): RawTarget =
-      e map { _.getVertex(Direction.IN) }
+    def raw_target(edge: AnyEdge)(e: RawEdge): RawTarget =
+      e map { _.vertex(Direction.IN) }
 
   }
 
@@ -73,47 +71,35 @@ case object evals {
 
   trait TitanGraph {
 
-    val graph: core.TitanGraph
+    val graph: core.TitanGraphTransaction
   }
 
-  trait TitanTensorStructure extends TensorStructure with TitanGraph {
+  trait TitanTensorStructure extends Tensors with TitanGraph {
 
     type TensorBound = AnyTitanType
     type RawTensor[L <: TensorBound, R <: TensorBound] = Duplet[L, R]
     type RawUnit = TitanUnit
 
-    def tensorRaw[L <: TensorBound, R <: TensorBound](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
-    def leftRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): L = t.left
-    def rightRaw[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): R = t.right
-    def toUnitRaw[X <: TensorBound](x: X): RawUnit = TitanUnit(graph)
+    def raw_tensor[L <: TensorBound, R <: TensorBound](l: L, r: R): RawTensor[L, R] = Duplet(l, r)
+    def raw_left[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): L = t.left
+    def raw_right[L <: TensorBound, R <: TensorBound](t: RawTensor[L, R]): R = t.right
+    def raw_toUnit[X <: TensorBound](x: X): RawUnit = TitanUnit(graph)
 
     implicit final def eval_fromUnitV[
       T <: AnyVertex
-    ]:  Eval[RawUnit, fromUnit[T], TitanVertices] =
-    new Eval[RawUnit, fromUnit[T], TitanVertices] {
+    ]:  Eval[fromUnit[T], RawUnit, TitanVertices] =
+    new Eval( morph => raw_input =>
 
-      def rawApply(morph: InMorph): InVal => OutVal = { inVal: InVal =>
-
-        Container(graph.query.has("label", morph.obj.label)
-          .vertices.asTitanVertices)
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+      Container(graph.query.has("label", morph.obj.label).vertices.asScala)
+    )
 
     implicit final def eval_fromUnitE[
       T <: AnyEdge
-    ]:  Eval[RawUnit, fromUnit[T], TitanEdges] =
-    new Eval[RawUnit, fromUnit[T], TitanEdges] {
+    ]:  Eval[fromUnit[T], RawUnit, TitanEdges] =
+    new Eval( morph => raw_input =>
 
-      def rawApply(morph: InMorph): InVal => OutVal = { inVal: InVal =>
-
-        Container(graph.query.has("label", morph.obj.label)
-          .edges.asTitanEdges)
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+      Container(graph.query.has("label", morph.obj.label).edges.asScala)
+    )
 
     implicit def containerMatch[X]:
         Matchable[Container[X]] =
@@ -141,69 +127,79 @@ case object evals {
   }
 
 
-  trait TitanBiproductStructure extends BiproductStructure {
+  trait TitanBiproductStructure extends Biproducts {
 
     type BiproductBound = AnyTitanType
     type RawBiproduct[L <: BiproductBound, R <: BiproductBound] = Duplet[L, R]
     type RawZero = TitanZero
 
-    def biproductRaw[L <: BiproductBound, R <: BiproductBound](l: L, r: R): RawBiproduct[L, R] = Duplet(l, r)
-    def leftProjRaw[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): L = t.left
-    def rightProjRaw[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): R = t.right
-    def toZeroRaw[X <: BiproductBound](x: X): RawZero = TitanZero
+    def raw_biproduct[L <: BiproductBound, R <: BiproductBound](l: L, r: R): RawBiproduct[L, R] = Duplet(l, r)
+    def raw_leftProj[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): L = t.left
+    def raw_rightProj[L <: BiproductBound, R <: BiproductBound](t: RawBiproduct[L, R]): R = t.right
+    def raw_toZero[X <: BiproductBound](x: X): RawZero = TitanZero
 
     implicit def verticesZero[V <: AnyVertex]:
-        ZeroFor[V, TitanVertices] =
-    new ZeroFor[V, TitanVertices] { def zero(o: Obj): T = Container[core.TitanVertex](Iterable()) }
+        RawFromZero[V, TitanVertices] =
+    new RawFromZero[V, TitanVertices] { def apply(o: V): TitanVertices = Container[core.TitanVertex](Iterable()) }
 
     implicit def edgesZero[E <: AnyEdge]:
-        ZeroFor[E, TitanEdges] =
-    new ZeroFor[E, TitanEdges] { def zero(o: Obj): T = Container[core.TitanEdge](Iterable()) }
+        RawFromZero[E, TitanEdges] =
+    new RawFromZero[E, TitanEdges] { def apply(o: E): TitanEdges = Container[core.TitanEdge](Iterable()) }
 
     implicit def valuesZero[VT <: AnyValueType]:
-        ZeroFor[VT, Container[VT#Val]] =
-    new ZeroFor[VT, Container[VT#Val]] { def zero(o: Obj): T = Container[VT#Val](Iterable()) }
+        RawFromZero[VT, Container[VT#Val]] =
+    new RawFromZero[VT, Container[VT#Val]] { def apply(o: VT): Container[VT#Val] = Container[VT#Val](Iterable()) }
 
-    implicit def predicatesZero[P <: AnyPredicate, E](implicit elem: ZeroFor[P#Element, E]):
-        ZeroFor[P, E] =
-    new ZeroFor[P, E] { def zero(o: Obj): T = elem.zero(o.element) }
+    implicit def predicatesZero[P <: AnyPredicate, E](implicit
+      elem_fromZero: RawFromZero[P#Element, E]
+    ):  RawFromZero[P, E] =
+    new RawFromZero[P, E] { def apply(o: P): E = elem_fromZero(o.element) }
 
 
     implicit def containerMerge[X]:
-        Mergeable[Container[X]] =
-    new Mergeable[Container[X]] {
+        RawMerge[Container[X]] =
+    new RawMerge[Container[X]] {
 
-      def merge(l: T, r: T): T =
+      def apply(l: Container[X], r: Container[X]): Container[X] =
         Container( l.values ++ r.values )
     }
 
     implicit def dupletMerge[X <: AnyTitanType](implicit
-      t: Mergeable[X]
-    ):  Mergeable[Duplet[X, X]] =
-    new Mergeable[Duplet[X, X]] {
+      raw_merge: RawMerge[X]
+    ):  RawMerge[Duplet[X, X]] =
+    new RawMerge[Duplet[X, X]] {
 
-      def merge(l: T, r: T): T = Duplet(
-        t.merge(l.left, r.left),
-        t.merge(l.right, r.right)
+      def apply(l: Duplet[X, X], r: Duplet[X, X]): Duplet[X, X] = Duplet(
+        raw_merge(l.left, r.left),
+        raw_merge(l.right, r.right)
       )
     }
 
   }
 
-
   trait TitanPropertyStructure extends TitanGraph {
 
     implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
-        Eval[Container[E], get[P], Container[P#Target#Val]] =
-    new Eval[Container[E], get[P], Container[P#Target#Val]] {
+        Eval[get[P], Container[E], Container[P#Target#Val]] =
+    new Eval( morph => elements =>
+      elements map { _.property[P#Target#Val](morph.relation.label).value }
+    )
 
-      def rawApply(morph: InMorph): InVal => OutVal = { elements =>
-        elements map { _.getProperty[P#Target#Val](morph.relation.label) }
+
+    implicit def eval_lookupV_Container[
+      V,
+      P <: AnyProperty {
+        type Source <: AnyVertex
+        type Target <: AnyValueType { type Val = V }
       }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
-
+    ]:  Eval[lookup[P], Container[V], TitanVertices] =
+    new Eval( morph => values =>
+      values flatMap { v =>
+        graph.query
+          .has(morph.relation.label, v)
+          .vertices.asScala
+      }
+    )
 
     implicit def eval_lookupV[
       V,
@@ -211,19 +207,28 @@ case object evals {
         type Source <: AnyVertex
         type Target <: AnyValueType { type Val = V }
       }
-    ]:
-        Eval[Container[V], lookup[P], TitanVertices] =
-    new Eval[Container[V], lookup[P], TitanVertices] {
+    ]:  Eval[lookup[P], V, TitanVertices] =
+    new Eval( morph => value =>
+      Container(
+        graph.query
+          .has(morph.relation.label, value)
+          .vertices.asScala
+      )
+    )
 
-      def rawApply(morph: InMorph): InVal => OutVal = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.relation.label, v)
-            .vertices.asTitanVertices
-        }
+    implicit def eval_lookupE_Container[
+      V,
+      P <: AnyProperty {
+        type Source <: AnyEdge
+        type Target <: AnyValueType { type Val = V }
       }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    ]:  Eval[lookup[P], Container[V], TitanEdges] =
+    new Eval( morph => values =>
+      values flatMap { v =>
+        graph.query.has(morph.relation.label, v)
+          .edges.asScala
+      }
+    )
 
     implicit def eval_lookupE[
       V,
@@ -231,38 +236,26 @@ case object evals {
         type Source <: AnyEdge
         type Target <: AnyValueType { type Val = V }
       }
-    ]:
-        Eval[Container[V], lookup[P], TitanEdges] =
-    new Eval[Container[V], lookup[P], TitanEdges] {
+    ]:  Eval[lookup[P], V, TitanEdges] =
+    new Eval( morph => value =>
+      Container(
+        graph.query
+          .has(morph.relation.label, value)
+          .edges.asScala
+      )
+    )
 
-      def rawApply(morph: InMorph): InVal => OutVal = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.relation.label, v)
-            .edges.asTitanEdges
-        }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
-
-    implicit def eval_lookupE_Alt[
-      P <: AnyProperty {
-        type Source <: AnyEdge;
-      }
-    ]
-    :   Eval[Container[P#Target#Val], inV[P], TitanEdges] =
-    new Eval[Container[P#Target#Val], inV[P], TitanEdges] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = { values =>
-        values flatMap { v =>
-          graph.query.has(morph.relation.label, v)
-            .edges.asTitanEdges
-        }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
-
+    // implicit def eval_lookupE_Alt[
+    //   P <: AnyProperty {
+    //     type Source <: AnyEdge;
+    //   }
+    // ]:  Eval[inV[P], Container[P#Target#Val], TitanEdges] =
+    // new Eval( morph => values =>
+    //   values flatMap { v =>
+    //     graph.query.has(morph.relation.label, v)
+    //       .edges.asScala
+    //   }
+    // )
 
   }
 
@@ -270,26 +263,16 @@ case object evals {
 
     implicit final def eval_quantify[
       P <: AnyPredicate, E <: core.TitanElement
-    ]:  Eval[Container[E], quantify[P], Container[E]] =
-    new Eval[Container[E], quantify[P], Container[E]] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = { elements =>
-        elements filter { evalPredicate(morph.predicate, _) }
-      }
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    ]:  Eval[quantify[P], Container[E], Container[E]] =
+    new Eval( morph => elements =>
+      elements filter { evalPredicate(morph.predicate, _) }
+    )
 
 
     implicit final def eval_coerce[
       P <: AnyPredicate, E <: core.TitanElement
-    ]:  Eval[Container[E], coerce[P], Container[E]] =
-    new Eval[Container[E], coerce[P], Container[E]] {
-
-      def rawApply(morph: InMorph): InVal => OutVal = x => x
-
-      def present(morph: InMorph): Seq[String] = Seq(morph.label)
-    }
+    ]:  Eval[coerce[P], Container[E], Container[E]] =
+    new Eval( _ => identity)
 
   }
 
@@ -298,17 +281,17 @@ case object evals {
     //
     // implicit final def eval_quantifyOutE[
     //   P <: AnyPredicate { type Element <: AnyEdge }
-    // ]:  Eval[TitanVertices, quantifyOutE[P], TitanEdges] =
-    // new Eval[TitanVertices, quantifyOutE[P], TitanEdges] {
+    // ]:  Eval[quantifyOutE[P], TitanVertices, TitanEdges] =
+    // new Eval[quantifyOutE[P], TitanVertices, TitanEdges] {
     //
-    //   def rawApply(morph: InMorph): InVal => OutVal = { vertices =>
+    //   morph => vertices =>
     //     vertices flatMap { v =>
     //       addConditions(morph.predicate,
     //         v.query
     //         .labels(morph.edge.label)
     //         .direction(Direction.IN)
     //       )
-    //       .edges.asTitanEdges
+    //       .edges
     //     }
     //   }
     //
@@ -317,15 +300,15 @@ case object evals {
 
   }
 
-
+  // NOTE: these separate "modules" are useful for testing
   case object categoryStructure extends TitanCategoryStructure
   case object graphStructure extends TitanGraphStructure
-  case class  tensorStructure(val graph: core.TitanGraph) extends TitanTensorStructure
+  case class  tensorStructure(val graph: core.TitanGraphTransaction) extends TitanTensorStructure
   case object biproductStructure extends TitanBiproductStructure
-  case class  propertyStructure(val graph: core.TitanGraph) extends TitanPropertyStructure
+  case class  propertyStructure(val graph: core.TitanGraphTransaction) extends TitanPropertyStructure
   case object predicateStructure extends TitanPredicateStructure
 
-  case class all(val graph: core.TitanGraph) extends
+  case class titanScarph(val graph: core.TitanGraphTransaction) extends
     TitanCategoryStructure with
     TitanGraphStructure with
     TitanTensorStructure with
@@ -341,12 +324,14 @@ case object evals {
 
 
 
-[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: evals.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: morphisms.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/predicates.scala]: predicates.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/rewrites.scala]: rewrites.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/syntax.scala]: syntax.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: titanSchema.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/types.scala]: types.scala.md
-[test/scala/ohnosequences/scarph/titan/schemaTests.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/schemaTests.scala.md
 [test/scala/ohnosequences/scarph/titan/TwitterTitanTest.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/TwitterTitanTest.scala.md
+[test/scala/ohnosequences/scarph/titan/schemaTests.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/schemaTests.scala.md
+[test/scala/ohnosequences/scarph/titan/SchemaCreation.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/SchemaCreation.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/predicates.scala]: predicates.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/types.scala]: types.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: morphisms.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: evals.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/syntax.scala]: syntax.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/writes.scala]: writes.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/rewrites.scala]: rewrites.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: titanSchema.scala.md

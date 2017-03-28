@@ -1,0 +1,4 @@
+
+- upgrade to Titan 1.0
+- implement the experimental scarph write API
+- make schema creation usable, fix a lot of bugs there

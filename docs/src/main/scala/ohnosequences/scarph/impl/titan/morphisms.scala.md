@@ -4,8 +4,7 @@ package ohnosequences.scarph.impl.titan
 
 object morphisms {
 
-  import ohnosequences.{ scarph => s}
-  import s.objects._, s.morphisms._
+  import ohnosequences.scarph._, impl._
 
 
   case class quantifyOutE[P <: AnyPredicate { type Element <: AnyEdge }]
@@ -55,12 +54,14 @@ object morphisms {
 
 
 
-[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: evals.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: morphisms.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/predicates.scala]: predicates.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/rewrites.scala]: rewrites.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/syntax.scala]: syntax.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: titanSchema.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/types.scala]: types.scala.md
-[test/scala/ohnosequences/scarph/titan/schemaTests.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/schemaTests.scala.md
 [test/scala/ohnosequences/scarph/titan/TwitterTitanTest.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/TwitterTitanTest.scala.md
+[test/scala/ohnosequences/scarph/titan/schemaTests.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/schemaTests.scala.md
+[test/scala/ohnosequences/scarph/titan/SchemaCreation.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/SchemaCreation.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/predicates.scala]: predicates.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/types.scala]: types.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: morphisms.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: evals.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/syntax.scala]: syntax.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/writes.scala]: writes.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/rewrites.scala]: rewrites.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: titanSchema.scala.md

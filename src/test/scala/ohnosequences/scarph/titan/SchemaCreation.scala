@@ -57,9 +57,6 @@ class SchemaCreation extends org.scalatest.FunSuite {
     cleanDB
   }
 
-
-
-
   def noNone[X](xs: Seq[Option[X]]): Boolean =
     xs contains { opt: Option[X] => !opt.isEmpty }
 

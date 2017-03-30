@@ -65,7 +65,7 @@ case object schema {
       }
 
     def indexNameFor(property: AnyProperty): String =
-      s"${property.label}.index"
+      s"${property.label}_index"
 
     final def indexFor(p: AnyProperty): Option[TitanGraphIndex] =
       Option(schemaManager getGraphIndex indexNameFor(p))

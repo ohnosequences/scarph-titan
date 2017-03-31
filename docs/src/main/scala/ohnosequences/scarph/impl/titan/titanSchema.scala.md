@@ -72,7 +72,7 @@ These methods work in a context of a previously created schema manager transacti
       }
 
     def indexNameFor(property: AnyProperty): String =
-      s"${property.label}.index"
+      s"${property.label}_index"
 
     final def indexFor(p: AnyProperty): Option[TitanGraphIndex] =
       Option(schemaManager getGraphIndex indexNameFor(p))
@@ -93,12 +93,12 @@ These methods work in a context of a previously created schema manager transacti
           schemaManager
             .buildIndex(indexNameFor(property), elementClass)
             .addKey(propertyKey)
-            .indexOnly(
-              property.source.elementType match {
-                case VertexElement => schemaManager getVertexLabel property.source.label
-                case EdgeElement   => schemaManager getEdgeLabel property.source.label
-              }
-            )
+            // .indexOnly(
+            //   property.source.elementType match {
+            //     case VertexElement => schemaManager getVertexLabel property.source.label
+            //     case EdgeElement   => schemaManager getEdgeLabel property.source.label
+            //   }
+            // )
 
         val indexBuilder =
           property.sourceArity match {

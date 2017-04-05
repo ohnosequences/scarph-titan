@@ -1,0 +1,7 @@
+Mostly bugfixes related with indices:
+
+- dotless index names
+- disable indexOnly in auto property indices
+- update to scarph 0.4.1
+
+With this release the API becomes usable with force.index = true.

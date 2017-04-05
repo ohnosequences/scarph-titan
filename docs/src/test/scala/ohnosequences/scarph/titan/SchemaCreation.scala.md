@@ -11,15 +11,6 @@ class SchemaCreation extends org.scalatest.FunSuite {
 
   test("create all types") {
 
-    val configuration: core.TitanFactory.Builder =
-    core.TitanFactory.build()
-      .set(                      "schema.default",  "none"          )
-      .set(                     "storage.backend",  "berkeleyje"    )
-      .set(                   "storage.directory",  "db"            )
-      .set(                "storage.transactions",  true            )
-      .set( "storage.berkeleyje.cache-percentage",  20              )
-      .set(  "storage.berkeleyje.isolation-level",  "SERIALIZABLE"  )
-
     val tGraph =
       configuration.open()
 
@@ -80,6 +71,15 @@ class SchemaCreation extends org.scalatest.FunSuite {
 
     file.delete
   }
+
+  val configuration: core.TitanFactory.Builder =
+  core.TitanFactory.build()
+    .set(                      "schema.default",  "none"          )
+    .set(                     "storage.backend",  "berkeleyje"    )
+    .set(                   "storage.directory",  "db"            )
+    .set(                "storage.transactions",  true            )
+    .set( "storage.berkeleyje.cache-percentage",  20              )
+    .set(  "storage.berkeleyje.isolation-level",  "SERIALIZABLE"  )
 }
 
 ```

@@ -180,7 +180,12 @@ case object evals {
     implicit def eval_get[E <: core.TitanElement, P <: AnyProperty]:
         Eval[get[P], Container[E], Container[P#Target#Val]] =
     new Eval( morph => elements =>
-      elements map { _.property[P#Target#Val](morph.relation.label).value }
+      elements flatMap { e =>
+        // NOTE: gremlin property may be empty (no value)
+        val prop = e.property[P#Target#Val](morph.relation.label)
+        if (prop.isPresent) Some(prop.value)
+        else None
+      }
     )
 
 

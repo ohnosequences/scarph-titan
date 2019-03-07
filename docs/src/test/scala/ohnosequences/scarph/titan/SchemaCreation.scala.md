@@ -87,14 +87,14 @@ class SchemaCreation extends org.scalatest.FunSuite {
 
 
 
-[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/evals.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/morphisms.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/predicates.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/predicates.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/types.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/types.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/rewrites.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/rewrites.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/syntax.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/syntax.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/types.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/types.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/evals.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/writes.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/writes.scala.md
-[test/scala/ohnosequences/scarph/titan/SchemaCreation.scala]: SchemaCreation.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/morphisms.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: ../../../../../main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala.md
 [test/scala/ohnosequences/scarph/titan/schemaTests.scala]: schemaTests.scala.md
+[test/scala/ohnosequences/scarph/titan/SchemaCreation.scala]: SchemaCreation.scala.md
 [test/scala/ohnosequences/scarph/titan/TwitterTitanTest.scala]: TwitterTitanTest.scala.md

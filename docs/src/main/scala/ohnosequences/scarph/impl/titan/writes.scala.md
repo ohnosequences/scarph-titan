@@ -22,6 +22,10 @@ case object writes {
       def addVertex(graph: TGraph)(v: V):
         V := TVertex =
         v := graph.addVertex(org.apache.tinkerpop.gremlin.structure.T.label, v.label: String)
+
+      def removeVertex(graph: TGraph)(v: V := TVertex): TGraph =
+        { v.value.remove; graph }
+
     }
 
   implicit def titanCanAddEdges[E <: AnyEdge]:
@@ -34,6 +38,9 @@ case object writes {
         tgt: E#Target := TVertex
       ): E := TEdge =
          e := src.value.addEdge(e.label, tgt.value)
+
+      def removeEdge(r: E := TEdge): Unit =
+        r.value.remove
     }
 
   implicit def titanCanSetProperties[
@@ -61,14 +68,14 @@ case object writes {
 
 
 
-[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: evals.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: morphisms.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/predicates.scala]: predicates.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/types.scala]: types.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/rewrites.scala]: rewrites.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/syntax.scala]: syntax.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: titanSchema.scala.md
-[main/scala/ohnosequences/scarph/impl/titan/types.scala]: types.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/evals.scala]: evals.scala.md
 [main/scala/ohnosequences/scarph/impl/titan/writes.scala]: writes.scala.md
-[test/scala/ohnosequences/scarph/titan/SchemaCreation.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/SchemaCreation.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/morphisms.scala]: morphisms.scala.md
+[main/scala/ohnosequences/scarph/impl/titan/titanSchema.scala]: titanSchema.scala.md
 [test/scala/ohnosequences/scarph/titan/schemaTests.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/schemaTests.scala.md
+[test/scala/ohnosequences/scarph/titan/SchemaCreation.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/SchemaCreation.scala.md
 [test/scala/ohnosequences/scarph/titan/TwitterTitanTest.scala]: ../../../../../../test/scala/ohnosequences/scarph/titan/TwitterTitanTest.scala.md

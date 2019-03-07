@@ -20,6 +20,10 @@ case object writes {
       def addVertex(graph: TGraph)(v: V):
         V := TVertex =
         v := graph.addVertex(org.apache.tinkerpop.gremlin.structure.T.label, v.label: String)
+
+      def removeVertex(graph: TGraph)(v: V := TVertex): TGraph =
+        { v.value.remove; graph }
+
     }
 
   implicit def titanCanAddEdges[E <: AnyEdge]:
@@ -32,6 +36,9 @@ case object writes {
         tgt: E#Target := TVertex
       ): E := TEdge =
          e := src.value.addEdge(e.label, tgt.value)
+
+      def removeEdge(r: E := TEdge): Unit =
+        r.value.remove
     }
 
   implicit def titanCanSetProperties[
